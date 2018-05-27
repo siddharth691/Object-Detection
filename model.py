@@ -190,73 +190,75 @@ class model:
 		Prediction will be of dimension [batch_size, no_grid, no_grid, 5*B+C]
 		in the 4th dimension: (1st B are confidence score, next 4*B are [x,y,w,h] repeated B times, and last C are class prob)
 		""" 
-		
-		### extracting classes and boxes from labels
-		label_classes = tf.reshape(labels[:,:,:,5:], [self.batch_size, self.no_grid, self.no_grid, self.no_classes])
-		label_boxes = tf.reshape(labels[:,:,:,1:5], [self.batch_size, self.no_grid, self.no_grid, 1, 4])
-		label_boxes = tf.tile(label_boxes, [1,1,1,self.boxes_per_cell,1]) / self.self.image_size
-		
-		### extracting classes, boxes and confidence from prediction
-		predict_classes = tf.reshape(prediction[:,:,:,5*self.boxes_per_cell:], [self.batch_size, self.no_grid, self.no_grid, self.no_classes])
-		predict_boxes = tf.reshape(prediction[:,:,:,self.boxes_per_cell:5*self.boxes_per_cell], [self.batch_size, self.no_grid, self.no_grid, self.boxes_per_cell, 4])
-		predict_confidence = tf.reshape(prediction[:,:,:,:self.boxes_per_cell], [self.batch_size, self.no_grid, self.no_grid, self.boxes_per_cell])
+		with tf.variable_scope("loss_definition"):
 
-		###Calculating offset for correction of prediction and formatting of labels
-		offset = np.transpose(np.reshape(np.array([np.arange(self.no_grid)] * self.no_grid * self.boxes_per_cell), (self.boxes_per_cell, self.no_grid, self.no_grid)), (1, 2, 0))
-		offset = tf.constant(offset, dtype = tf.float32)
-		offset = tf.reshape(offset, [1, self.no_grid, self.no_grid, self.boxes_per_cell])
-		offset = tf.tile(offset, [self.batch_size, 1, 1, 1])
-		
-		###Correction and formatting
-		#Correcting predict_boxes for calculating IOU
-		corr_predict_boxes = tf.stack([(predict_boxes[:,:,:,:,0] + offset) / self.no_grid,
-									  (predict_boxes[:,:,:,:,1] + np.transpose(offset, (0,2,1,3))) / self.no_grid,
-									  tf.square(predict_boxes[:,:,:,:,2]),
-									  tf.square(predict_boxes[:,:,:,:,3])])
-		corr_predict_boxes = tf.transpose(corr_predict_boxes, [1,2,3,4,0]) #As tf.stack appends new dimension in the front
-		
-		#Formatting label boxes according by normalization and subtracting offset
-		format_label_boxes = tf.stack([label_boxes[:,:,:,:,0] * self.no_grid - offset,
-									   label_boxes[:,:,:,:,1] + np.transpose(offset, (0,2,1,3)) / self.no_grid,
-									   tf.sqrt(label_boxes[:,:,:,:,2]),
-									   tf.sqrt(label_boxes[:,:,:,:,3])])
-		format_label_boxes = tf.transpose(format_label_boxes, [1,2,3,4,0]) #As tf.stack appends new dimension in the front
-		
-		#Calculated IOU for each box (batch_size, no_grid, no_grid, boxes_per_cell)
-		calc_iou_boxes = calc_iou(corr_predict_boxes, label_boxes)
-		
-		###Calculating difference masks
-		#Mask if the object is present in the cell or not (batch_size, no_grid, no_grid, 1)
-		object_presence_map = tf.reshape(labels[:,:,:,0], [self.batch_size, self.no_grid, self.no_grid, 1]) #if object is present in the grid cell or not
-		
-		#Calculating object max (float 1,0 of shape (batch_size, no_grid, no_grid, boxes_per_cell))
-		iou_mask = tf.reduce_max(calc_iou_boxes, axis = 3, keepdims = True)
-		iou_mask = tf.cast((calc_iou_boxes>=iou_mask), dtype=tf.float64)
-		object_mask = iou_mask * object_presence_map
-		
-		#Calculating no object mask (float 1,0 of shape (batch_size, no_grid, no_grid, boxes_per_cell))
-		no_object_mask = tf.ones_like(object_mask, dtype=tf.float64) - object_mask
-		
-		#Calculating coordinate mask (float 1,0 of shape (batch_size, no_grid, no_grid, boxes_per_cell, 1))
-		coord_mask = tf.expand_dims(object_mask, 4)
-		
-		
-		### Losses
-		#Class loss
-		class_loss = class_scale * tf.reduce_mean(tf.reduce_sum(tf.square(object_presence_map*(predict_classes - label_classes)), axis = [1,2,3]))
-		
-		#Calculating confidence loss
-		confidence_obj_loss = object_mask * (predict_confidence - calc_iou_boxes)  # we want to make confidence score same as iou when obj is present
-		confidence_obj_loss = confidence_obj_scale * tf.reduce_mean(tf.reduce_sum(tf.square(confidence_obj_loss), axis = [1,2,3]))
-		
-		confidence_noobj_loss = no_object_mask * (predicted_confidence) #we want to make the confidence score 0 when obj is not present
-		confidence_noobj_loss = confidence_noobj_scale * tf.reduce_mean(tf.reduce_sum(tf.square(confidence_noobj_loss), axis = [1,2,3]))
-		
-		#Calculating coordinates loss
-		coord_loss = coord_mask * (predict_boxes - format_label_boxes)
-		coord_loss = coord_scale * tf.reduce_mean(tf.reduce_sum(tf.square(coord_loss), axis = [1,2,3]))
-		
-		#Adding up the losses
-		total_loss = class_loss + confidence_obj_loss + confidence_noobj_loss + coord_loss
+			### extracting classes and boxes from labels
+			label_classes = tf.reshape(labels[:,:,:,5:], [self.batch_size, self.no_grid, self.no_grid, self.no_classes])
+			label_boxes = tf.reshape(labels[:,:,:,1:5], [self.batch_size, self.no_grid, self.no_grid, 1, 4])
+			label_boxes = tf.tile(label_boxes, [1,1,1,self.boxes_per_cell,1]) / self.self.image_size
+			
+			### extracting classes, boxes and confidence from prediction
+			predict_classes = tf.reshape(prediction[:,:,:,5*self.boxes_per_cell:], [self.batch_size, self.no_grid, self.no_grid, self.no_classes])
+			predict_boxes = tf.reshape(prediction[:,:,:,self.boxes_per_cell:5*self.boxes_per_cell], [self.batch_size, self.no_grid, self.no_grid, self.boxes_per_cell, 4])
+			predict_confidence = tf.reshape(prediction[:,:,:,:self.boxes_per_cell], [self.batch_size, self.no_grid, self.no_grid, self.boxes_per_cell])
 
+			###Calculating offset for correction of prediction and formatting of labels
+			offset = np.transpose(np.reshape(np.array([np.arange(self.no_grid)] * self.no_grid * self.boxes_per_cell), (self.boxes_per_cell, self.no_grid, self.no_grid)), (1, 2, 0))
+			offset = tf.constant(offset, dtype = tf.float32)
+			offset = tf.reshape(offset, [1, self.no_grid, self.no_grid, self.boxes_per_cell])
+			offset = tf.tile(offset, [self.batch_size, 1, 1, 1])
+			
+			###Correction and formatting
+			#Correcting predict_boxes for calculating IOU
+			corr_predict_boxes = tf.stack([(predict_boxes[:,:,:,:,0] + offset) / self.no_grid,
+										  (predict_boxes[:,:,:,:,1] + np.transpose(offset, (0,2,1,3))) / self.no_grid,
+										  tf.square(predict_boxes[:,:,:,:,2]),
+										  tf.square(predict_boxes[:,:,:,:,3])])
+			corr_predict_boxes = tf.transpose(corr_predict_boxes, [1,2,3,4,0]) #As tf.stack appends new dimension in the front
+			
+			#Formatting label boxes according by normalization and subtracting offset
+			format_label_boxes = tf.stack([label_boxes[:,:,:,:,0] * self.no_grid - offset,
+										   label_boxes[:,:,:,:,1] + np.transpose(offset, (0,2,1,3)) / self.no_grid,
+										   tf.sqrt(label_boxes[:,:,:,:,2]),
+										   tf.sqrt(label_boxes[:,:,:,:,3])])
+			format_label_boxes = tf.transpose(format_label_boxes, [1,2,3,4,0]) #As tf.stack appends new dimension in the front
+			
+			#Calculated IOU for each box (batch_size, no_grid, no_grid, boxes_per_cell)
+			calc_iou_boxes = calc_iou(corr_predict_boxes, label_boxes)
+			
+			###Calculating difference masks
+			#Mask if the object is present in the cell or not (batch_size, no_grid, no_grid, 1)
+			object_presence_map = tf.reshape(labels[:,:,:,0], [self.batch_size, self.no_grid, self.no_grid, 1]) #if object is present in the grid cell or not
+			
+			#Calculating object max (float 1,0 of shape (batch_size, no_grid, no_grid, boxes_per_cell))
+			iou_mask = tf.reduce_max(calc_iou_boxes, axis = 3, keepdims = True)
+			iou_mask = tf.cast((calc_iou_boxes>=iou_mask), dtype=tf.float64)
+			object_mask = iou_mask * object_presence_map
+			
+			#Calculating no object mask (float 1,0 of shape (batch_size, no_grid, no_grid, boxes_per_cell))
+			no_object_mask = tf.ones_like(object_mask, dtype=tf.float64) - object_mask
+			
+			#Calculating coordinate mask (float 1,0 of shape (batch_size, no_grid, no_grid, boxes_per_cell, 1))
+			coord_mask = tf.expand_dims(object_mask, 4)
+			
+			
+			### Losses
+			#Class loss
+			self.class_loss = class_scale * tf.reduce_mean(tf.reduce_sum(tf.square(object_presence_map*(predict_classes - label_classes)), axis = [1,2,3]))
+			
+			#Calculating confidence loss
+			self.confidence_obj_loss = object_mask * (predict_confidence - calc_iou_boxes)  # we want to make confidence score same as iou when obj is present
+			self.confidence_obj_loss = confidence_obj_scale * tf.reduce_mean(tf.reduce_sum(tf.square(self.confidence_obj_loss), axis = [1,2,3]))
+			
+			self.confidence_noobj_loss = no_object_mask * (predicted_confidence) #we want to make the confidence score 0 when obj is not present
+			self.confidence_noobj_loss = confidence_noobj_scale * tf.reduce_mean(tf.reduce_sum(tf.square(self.confidence_noobj_loss), axis = [1,2,3]))
+			
+			#Calculating coordinates loss
+			self.coord_loss = coord_mask * (predict_boxes - format_label_boxes)
+			self.coord_loss = coord_scale * tf.reduce_mean(tf.reduce_sum(tf.square(self.coord_loss), axis = [1,2,3]))
+			
+			#Adding up the losses
+			self.total_loss = self.class_loss + self.confidence_obj_loss + self.confidence_noobj_loss + self.coord_loss
 
+			return self.total_loss, self.class_loss, self.confidence_obj_loss, self.confidence_noobj_loss, self.coord_loss
+			
