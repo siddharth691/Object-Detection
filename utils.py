@@ -23,28 +23,28 @@ def readData:
 
 		#Reading annotation file
 		with open(self.annoPath, 'r') as f:
-    		self.file = json.load(f)
+			self.file = json.load(f)
 
-    	self.classes = self.file['types']
-    	self.no_classes = len(self.classes)
-    	self.no_train_images = 0
-    	self.no_test_images = 0
-    	self.no_other_images = 0
-    	self.trainId = []
-    	self.testId = []
-    	self.otherId = []
+		self.classes = self.file['types']
+		self.no_classes = len(self.classes)
+		self.no_train_images = 0
+		self.no_test_images = 0
+		self.no_other_images = 0
+		self.trainId = []
+		self.testId = []
+		self.otherId = []
 
-    	for imgId in self.file['imgs'].keys():
-		    path = self.file['imgs'][imgId]['path']
-		    if 'train' in path:
-		        self.no_train_images+=1
-		        self.trainId.append(path.split('.')[0].split('/')[1])
-		    elif 'test' in path:
-		        self.no_test_images+=1
-		        self.testId.append(path.split('.')[0].split('/')[1])
-		    elif 'other' in path:
-		        self.no_other_images+=1
-		        self.otherId.append(path.split('.')[0].split('/')[1])
+		for imgId in self.file['imgs'].keys():
+			path = self.file['imgs'][imgId]['path']
+			if 'train' in path:
+				self.no_train_images+=1
+				self.trainId.append(path.split('.')[0].split('/')[1])
+			elif 'test' in path:
+				self.no_test_images+=1
+				self.testId.append(path.split('.')[0].split('/')[1])
+			elif 'other' in path:
+				self.no_other_images+=1
+				self.otherId.append(path.split('.')[0].split('/')[1])
 
 		self.classes_no = [i for i in range(len(self.classes))]
 		self.classes_dict = dict(zip(self.classes, self.classes_no))
@@ -81,9 +81,9 @@ def readData:
 
 
 
-    def createImageLabel(self, imgId):
+	def createImageLabel(self, imgId):
 
-    	objs = self.file['imgs'][imgId]['objects']
+		objs = self.file['imgs'][imgId]['objects']
 		label = np.zeros((config.no_grid, config.no_grid, 5 + self.no_classes))
 		for obj in objs:
 
