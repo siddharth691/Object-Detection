@@ -31,11 +31,11 @@ optimizer = tf.train.AdamOptimizer(config.learning_rate).minimize(total_loss_pla
 
 #Restoring last checkpoint or pretrained model
 try:
-    saver.restore(sess, checkpoint_path)
-    print ('Loading from past checkpoint...')
+	saver.restore(sess, checkpoint_path)
+	print ('Loading from past checkpoint...')
 except Exception as e:
-    print 'Exit, atleast need a pretrained model'
-    exit(0)
+	print 'Exit, atleast need a pretrained model'
+	exit(0)
 
 
 
@@ -65,10 +65,10 @@ for epoch_no in range(config.epoch):
 
 	
 	with open(log_file, "a") as myfile:
-    	myfile.write(current_status)
-    	myfile.write("\n")
+		myfile.write(current_status)
+		myfile.write("\n")
 
-    myfile.close()
+	myfile.close()
 
-    
+	
 	saver.save(sess, checkpoint_path)
