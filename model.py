@@ -19,8 +19,7 @@ class model:
 		self.confidence_obj_scale = 
 		self.confidence_noobj_scale = 
 
-
-
+		
 	def conv_layers_typ1(self, x):
 	
 		#Repeat Convolutional layer 1
@@ -44,9 +43,9 @@ class model:
 		return x2
 
 
-	def yolo_model(self):
+	def yolo_model(self, scope ="yolo_model"):
 	
-		with tf.variable_scope('yolo_model'):
+		with tf.variable_scope(scope, reuse = tf.AUTO_REUSE):
 			
 			#Convolutional layer 1
 			x1 = tf.layers.conv2d(x,64,7,2,'same')
@@ -128,7 +127,7 @@ class model:
 			return out
 
 
-	def cal_iou(self, predict_boxes, label_boxes):
+	def cal_iou(self, predict_boxes, label_boxes, scope = "iou"):
 		
 		"""
 		Calculates IOU in multidimension
@@ -143,40 +142,43 @@ class model:
 		IOU (batch_size, no_grid, no_grid, boxes_per_cell) : multidimensional IOU (truncated between 0 and 1)
 		"""
 		#Calculating the predicted box upper left x,y and lower right x,y
-		boxes1 = tf.stack([predict_boxes[:,:,:,:,0],
-						   predict_boxes[:,:,:,:,1],
-						   (predict_boxes[:,:,:,:,0] + predict_boxes[:,:,:,:,2]),
-						   (predict_boxes[:,:,:,:,1] + predict_boxes[:,:,:,:,3])])
-		boxes1 = tf.transpose(boxes1, [1,2,3,4,0])
+
+		with tf.variable_scope(scope, reuse= tf.AUTO_REUSE):
+
+			boxes1 = tf.stack([predict_boxes[:,:,:,:,0],
+							   predict_boxes[:,:,:,:,1],
+							   (predict_boxes[:,:,:,:,0] + predict_boxes[:,:,:,:,2]),
+							   (predict_boxes[:,:,:,:,1] + predict_boxes[:,:,:,:,3])])
+			boxes1 = tf.transpose(boxes1, [1,2,3,4,0])
+			
+			#Calculating the actual label box upper left x,y and lower right x,y
+			boxes2 = tf.stack([label_boxes[:,:,:,:,0],
+							   label_boxes[:,:,:,:,1],
+							   (label_boxes[:,:,:,:,0] + label_boxes[:,:,:,:,2]),
+							   (label_boxes[:,:,:,:,1] + label_boxes[:,:,:,:,3])])
+			boxes2 = tf.transpose(boxes2, [1,2,3,4,0])
+			
+			#Calculating the intersection box upper left x,y and lower right x,y
+			ul = tf.maximum(boxes1[:,:,:,:,:2], boxes2[:,:,:,:,:2])
+			lr = tf.minimum(boxes1[:,:,:,:,2:], boxes2[:,:,:,:,2:])
+			
+			#Calculating the area of the intersection box
+			idiff = tf.maximum(0.0, lr - ul)
+			iArea = idiff[:,:,:,:,0] * idiff[:,:,:,:,1]
+			
+			#Calculating the area of label box and predicted box
+			lArea = (boxes2[:,:,:,:,2] - boxes2[:,:,:,:,0])*(boxes2[:,:,:,:,3] - boxes2[:,:,:,:,1])
+			pArea = (boxes1[:,:,:,:,2] - boxes1[:,:,:,:,0])*(boxes1[:,:,:,:,3] - boxes1[:,:,:,:,1])
+			
+			
+			#Calculating union area
+			uArea = tf.maximum(lArea + pArea - iArea, 1e-10)
 		
-		#Calculating the actual label box upper left x,y and lower right x,y
-		boxes2 = tf.stack([label_boxes[:,:,:,:,0],
-						   label_boxes[:,:,:,:,1],
-						   (label_boxes[:,:,:,:,0] + label_boxes[:,:,:,:,2]),
-						   (label_boxes[:,:,:,:,1] + label_boxes[:,:,:,:,3])])
-		boxes2 = tf.transpose(boxes2, [1,2,3,4,0])
-		
-		#Calculating the intersection box upper left x,y and lower right x,y
-		ul = tf.maximum(boxes1[:,:,:,:,:2], boxes2[:,:,:,:,:2])
-		lr = tf.minimum(boxes1[:,:,:,:,2:], boxes2[:,:,:,:,2:])
-		
-		#Calculating the area of the intersection box
-		idiff = tf.maximum(0.0, lr - ul)
-		iArea = idiff[:,:,:,:,0] * idiff[:,:,:,:,1]
-		
-		#Calculating the area of label box and predicted box
-		lArea = (boxes2[:,:,:,:,2] - boxes2[:,:,:,:,0])*(boxes2[:,:,:,:,3] - boxes2[:,:,:,:,1])
-		pArea = (boxes1[:,:,:,:,2] - boxes1[:,:,:,:,0])*(boxes1[:,:,:,:,3] - boxes1[:,:,:,:,1])
-		
-		
-		#Calculating union area
-		uArea = tf.maximum(lArea + pArea - iArea, 1e-10)
-		
-		#Clipping and returning the IOU
-		return tf.clip_by_value(iArea / uArea . 0.0, 1.0)
+			#Clipping and returning the IOU
+			return tf.clip_by_value(iArea / uArea . 0.0, 1.0)
 
 
-	def loss(self, prediction, labels):
+	def loss(self, prediction, labels, scope = "loss_definition"):
 	
 		"""
 		#Dimensions of labels:
@@ -190,7 +192,7 @@ class model:
 		Prediction will be of dimension [batch_size, no_grid, no_grid, 5*B+C]
 		in the 4th dimension: (1st B are confidence score, next 4*B are [x,y,w,h] repeated B times, and last C are class prob)
 		""" 
-		with tf.variable_scope("loss_definition"):
+		with tf.variable_scope(scope, reuse = tf.AUTO_REUSE):
 
 			### extracting classes and boxes from labels
 			label_classes = tf.reshape(labels[:,:,:,5:], [self.batch_size, self.no_grid, self.no_grid, self.no_classes])
@@ -261,4 +263,4 @@ class model:
 			self.total_loss = self.class_loss + self.confidence_obj_loss + self.confidence_noobj_loss + self.coord_loss
 
 			return self.total_loss, self.class_loss, self.confidence_obj_loss, self.confidence_noobj_loss, self.coord_loss
-			
+

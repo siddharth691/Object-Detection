@@ -5,7 +5,7 @@ import random
 
 def readData:
 
-	def __init__(self, dir, phase):
+	def __init__(self, dir):
 
 		self.dir = dir
 		self.trainPath = os.path.join(dir, 'train')
@@ -49,9 +49,12 @@ def readData:
 		self.classes_no = [i for i in range(len(self.classes))]
 		self.classes_dict = dict(zip(self.classes, self.classes_no))
 
-	def read_img(self):
+	def read_img(self, image_path):
 
-		
+		image = cv2.imread(image_path)
+		image = cv2.resize(image, (self.image_size, self.image_size)).astype(np.float32)
+		return image
+
 
 	def createLabels(self, phase = 'train'):
 
