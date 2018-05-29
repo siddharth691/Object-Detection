@@ -15,6 +15,8 @@ confidence_noobj_scale =
 coord_scale = 
 
 learning_rate = 
+alpha = 
+dropout = 
 dir_path = 
 
 checkpoint = 

@@ -20,7 +20,7 @@ checkpoint_path = os.path.join(config.checkpoint_path, "model.ckpt")
 log_file = os.path.join(config.log_file_path ,'status_log.txt')
 
 #Calling the model to define the yolo model
-predictions = model.yolo_model()
+predictions = model.yolo_model(alpha = config.alpha, dropout_rate = config.dropout, is_training= True)
 
 #Calling loss function to define all the losses
 total_loss_placeholder = model.loss(predictions, label_placeholder)

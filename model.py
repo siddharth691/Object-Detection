@@ -24,75 +24,88 @@ class model:
 	def conv_layers_typ1(self, x):
 	
 		#Repeat Convolutional layer 1
-		x1 = tf.layers.conv2d(x, 256,1)
+		x1 = tf.layers.conv2d(x, 256,1, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+		x1 = tf.nn.leaky_relu(x1, alpha)
 
 		#Repeat convolutional layer 2
-		x2 = tf.layers.conv2d(x1, 512, 3)
-		
+		x2 = tf.layers.conv2d(x1, 512, 3, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+		x2 = tf.nn.leaky_relu(x2, alpha)
+
 		return x2
 
 
 	def conv_layers_typ2(self, x):
 	
 		#Repeat convolutional layer 1
-		x1 = tf.layers.conv2d(x, 512, 1)
-		
+		x1 = tf.layers.conv2d(x, 512, 1,'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+		x1 = tf.nn.leaky_relu(x1, alpha)
+
 		#Repeat convolutional layer 2
 		
-		x2 = tf.layers.conv2d(x1, 1024, 3)
-		
+		x2 = tf.layers.conv2d(x1, 1024, 3, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+		x2 = tf.nn.leaky_relu(x2, alpha)
+
 		return x2
 
 
-	def yolo_model(self, scope ="yolo_model"):
+	def yolo_model(self, alpha, dropout_rate, is_training, scope ="yolo_model"):
 	
 		with tf.variable_scope(scope, reuse = tf.AUTO_REUSE):
 			
 			#Convolutional layer 1
-			x1 = tf.layers.conv2d(x,64,7,2,'same')
+			x1 = tf.layers.conv2d(x,64,7,2,'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x1 = tf.nn.leaky_relu(x1, alpha)
+
 
 			#Max pool layer 1
 			x2 = tf.layers.max_pooling2d(x1,2,2)
 			
 			#Convolutional layer 2
-			x3 = tf.layers.conv2d(x2, 192, 3)
-			
+			x3 = tf.layers.conv2d(x2, 192, 3, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x3 = tf.nn.leaky_relu(x3, alpha)
+
 			#Max pool layer 2
 			x4 = tf.layers.max_pooling2d(x3,2,2)
 			
 			#Convolutional layer 3
-			x5 = tf.layers.conv2d(x4, 128,1)
-			
+			x5 = tf.layers.conv2d(x4, 128,1, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x5 = tf.nn.leaky_relu(x5, alpha)
+
 			#Convolutional layer 4
-			x6 = tf.layers.conv2d(x5, 256, 3)
-			
+			x6 = tf.layers.conv2d(x5, 256, 3, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x6 = tf.nn.leaky_relu(x6, alpha)
+
 			#Convolutional layer 5
-			x7 = tf.layers.conv2d(x6, 256, 1)
-			
+			x7 = tf.layers.conv2d(x6, 256, 1, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x7 = tf.nn.leaky_relu(x7, alpha)
+
 			#Convolutional layer 6
-			x8 = tf.layers.conv2d(x7, 512, 3)
-			
+			x8 = tf.layers.conv2d(x7, 512, 3, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x8 = tf.nn.leaky_relu(x8, alpha)
+
 			#Max pool layer 3
 			x9 = tf.layers.max_pooling2d(x8, 2,2)
 			
 			#Convolutional layers 7,8
 			x10 = conv_layers_typ1(x9)
-			
+
 			#Convolutional layers 9,10
 			x11 = conv_layers_typ1(x10)
-			
+
 			#Convolutional layers 11,12
 			x12 = conv_layers_typ1(x11)
-			
+
 			#Convolutional layers 13,14
 			x13 = conv_layers_typ1(x12)
-			
+
 			#Convolutional layer 15
-			x14 = tf.layers.conv2d(x13, 512, 1)
-			
+			x14 = tf.layers.conv2d(x13, 512, 1, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x14 = tf.nn.leaky_relu(x14, alpha)
+
 			#Convolutional layer 16
-			x15 = tf.layers.conv2d(x14, 1024, 3)
-			
+			x15 = tf.layers.conv2d(x14, 1024, 3, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x15 = tf.nn.leaky_relu(x15, alpha)
+
 			#Max pool layer 4
 			x16 = tf.layers.max_pooling2d(x15, 2,2)
 			
@@ -103,24 +116,33 @@ class model:
 			x18 = conv_layers_typ2(x17)
 			
 			#Convolutional layer 21
-			x19 = tf.layers.conv2d(x18, 1024, 3)
-			
+			x19 = tf.layers.conv2d(x18, 1024, 3, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x19 = tf.nn.leaky_relu(x19, alpha)
+
 			#Convolutional layer 22
-			x20 = tf.layers.conv2d(x19, 1024, 3, 2)
-			
+			x20 = tf.layers.conv2d(x19, 1024, 3, 2, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x20 = tf.nn.leaky_relu(x20, alpha)
+
 			#Convolutional layer 23
-			x21 = tf.layers.conv2d(x20, 1024, 3)
-			
+			x21 = tf.layers.conv2d(x20, 1024, 3, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x21 = tf.nn.leaky_relu(x21, alpha)
+
 			#Convolutional layer 24
-			x22 = tf.layers.conv2d(x21, 1024, 3)
-			
+			x22 = tf.layers.conv2d(x21, 1024, 3, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x22 = tf.nn.leaky_relu(x22, alpha)
+
 			#Fully connected layer 1
 			flat1 = tf.contrib.layers.flatten(x22)
 			x23 = tf.layers.dense(flat1, 512)
-			
+			x23 = tf.nn.leaky_relu(x23, alpha)
+			# x23 = tf.layers.dropout(inputs=x23, rate= dropout_rate, training= is_training)
+
+
 			#Fully connected layer 2
 			flat2 = tf.contrib.layers.flatten(x23)
 			x24 = tf.layers.dense(flat2, 4096)
+			x24 = tf.nn.leaky_relu(x24, alpha)
+			x24 = tf.layers.dropout(inputs=x24, rate= dropout_rate, training= is_training)
 			
 			#Reshaping the output of the last layer to the size (batch size, S,S,(5*B+C))
 			out = tf.reshape(x24, (-1, self.no_grid,self.no_grid,5*self.no_boxes_per_cell + self.no_classes))
