@@ -13,8 +13,8 @@ saver = tf.train.Saver(var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIA
 sess.run(tf.global_variables_initializer())
 
 
-image_placeholder = tf.placeholder(tf.float32, shape = [self.batch_size,self.image_size,self.image_size,3], name='image_placeholder')
-label_placeholder = tf.placeholder(tf.float32, shape = [self.batch_size, self.no_grid, self.no_grid, 5+self.no_classes], name='label_placeholder')
+image_placeholder = tf.placeholder(tf.float32, shape = [config.batch_size, config.image_size,config.image_size,3], name='image_placeholder')
+label_placeholder = tf.placeholder(tf.float32, shape = [config.batch_size, config.no_grid, config.no_grid, 5+cofig.no_classes], name='label_placeholder')
 global_batch_no = tf.Variable(0, name= 'global_step', trainable = False)
 checkpoint_path = os.path.join(config.checkpoint_path, "model.ckpt")
 log_file = os.path.join(config.log_file_path ,'status_log.txt')

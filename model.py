@@ -1,25 +1,26 @@
 import tensorflow as tf
 import numpy as np
+import config
 
 class model:
 
 	def __init__(self):
 
-		self.batch_size = 
-		self.image_width = 
-		self.image_height = 
-		self.image_size = 
+		self.batch_size = config.batch_size
+		self.image_width = config.image_width
+		self.image_height = config.image_height
+		self.image_size = config.image_size
 
-		self.no_grid = 
-		self.no_classes = 
-		self.no_boxes_per_cell = 
+		self.no_grid = config.no_grid
+		self.no_classes = config.no_classes
+		self.no_boxes_per_cell = config.no_boxes_per_cell
 
 		#Scales
-		self.class_scale = 
-		self.confidence_obj_scale = 
-		self.confidence_noobj_scale = 
+		self.class_scale = config.class_scale
+		self.confidence_obj_scale = config.confidence_obj_scale
+		self.confidence_noobj_scale = config.confidence_noobj_scale
+		self.coord_scale = config.coord_scale
 
-		
 	def conv_layers_typ1(self, x):
 	
 		#Repeat Convolutional layer 1
@@ -246,18 +247,18 @@ class model:
 			
 			### Losses
 			#Class loss
-			self.class_loss = class_scale * tf.reduce_mean(tf.reduce_sum(tf.square(object_presence_map*(predict_classes - label_classes)), axis = [1,2,3]))
+			self.class_loss = self.class_scale * tf.reduce_mean(tf.reduce_sum(tf.square(object_presence_map*(predict_classes - label_classes)), axis = [1,2,3]))
 			
 			#Calculating confidence loss
 			self.confidence_obj_loss = object_mask * (predict_confidence - calc_iou_boxes)  # we want to make confidence score same as iou when obj is present
-			self.confidence_obj_loss = confidence_obj_scale * tf.reduce_mean(tf.reduce_sum(tf.square(self.confidence_obj_loss), axis = [1,2,3]))
+			self.confidence_obj_loss = self.confidence_obj_scale * tf.reduce_mean(tf.reduce_sum(tf.square(self.confidence_obj_loss), axis = [1,2,3]))
 			
 			self.confidence_noobj_loss = no_object_mask * (predicted_confidence) #we want to make the confidence score 0 when obj is not present
-			self.confidence_noobj_loss = confidence_noobj_scale * tf.reduce_mean(tf.reduce_sum(tf.square(self.confidence_noobj_loss), axis = [1,2,3]))
+			self.confidence_noobj_loss = self.confidence_noobj_scale * tf.reduce_mean(tf.reduce_sum(tf.square(self.confidence_noobj_loss), axis = [1,2,3]))
 			
 			#Calculating coordinates loss
 			self.coord_loss = coord_mask * (predict_boxes - format_label_boxes)
-			self.coord_loss = coord_scale * tf.reduce_mean(tf.reduce_sum(tf.square(self.coord_loss), axis = [1,2,3]))
+			self.coord_loss = self.coord_scale * tf.reduce_mean(tf.reduce_sum(tf.square(self.coord_loss), axis = [1,2,3]))
 			
 			#Adding up the losses
 			self.total_loss = self.class_loss + self.confidence_obj_loss + self.confidence_noobj_loss + self.coord_loss
