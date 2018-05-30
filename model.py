@@ -24,11 +24,11 @@ class model:
 	def conv_layers_typ1(self, x):
 	
 		#Repeat Convolutional layer 1
-		x1 = tf.layers.conv2d(x, 256,1, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+		x1 = tf.layers.conv2d(x, 256,1, 'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
 		x1 = tf.nn.leaky_relu(x1, alpha)
 
 		#Repeat convolutional layer 2
-		x2 = tf.layers.conv2d(x1, 512, 3, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+		x2 = tf.layers.conv2d(x1, 512, 3, 'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
 		x2 = tf.nn.leaky_relu(x2, alpha)
 
 		return x2
@@ -37,23 +37,23 @@ class model:
 	def conv_layers_typ2(self, x):
 	
 		#Repeat convolutional layer 1
-		x1 = tf.layers.conv2d(x, 512, 1,'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+		x1 = tf.layers.conv2d(x, 512, 1,'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
 		x1 = tf.nn.leaky_relu(x1, alpha)
 
 		#Repeat convolutional layer 2
 		
-		x2 = tf.layers.conv2d(x1, 1024, 3, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+		x2 = tf.layers.conv2d(x1, 1024, 3, 'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
 		x2 = tf.nn.leaky_relu(x2, alpha)
 
 		return x2
 
 
-	def yolo_model(self, alpha, dropout_rate, is_training, scope ="yolo_model"):
+	def yolo_model(self, images, alpha, dropout_rate, is_training, scope ="yolo_model"):
 	
 		with tf.variable_scope(scope, reuse = tf.AUTO_REUSE):
 			
 			#Convolutional layer 1
-			x1 = tf.layers.conv2d(x,64,7,2,'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x1 = tf.layers.conv2d(images,64,7,2,'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
 			x1 = tf.nn.leaky_relu(x1, alpha)
 
 
@@ -61,26 +61,26 @@ class model:
 			x2 = tf.layers.max_pooling2d(x1,2,2)
 			
 			#Convolutional layer 2
-			x3 = tf.layers.conv2d(x2, 192, 3, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x3 = tf.layers.conv2d(x2, 192, 3, 'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
 			x3 = tf.nn.leaky_relu(x3, alpha)
 
 			#Max pool layer 2
 			x4 = tf.layers.max_pooling2d(x3,2,2)
 			
 			#Convolutional layer 3
-			x5 = tf.layers.conv2d(x4, 128,1, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x5 = tf.layers.conv2d(x4, 128,1, 'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
 			x5 = tf.nn.leaky_relu(x5, alpha)
 
 			#Convolutional layer 4
-			x6 = tf.layers.conv2d(x5, 256, 3, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x6 = tf.layers.conv2d(x5, 256, 3, 'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
 			x6 = tf.nn.leaky_relu(x6, alpha)
 
 			#Convolutional layer 5
-			x7 = tf.layers.conv2d(x6, 256, 1, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x7 = tf.layers.conv2d(x6, 256, 1, 'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
 			x7 = tf.nn.leaky_relu(x7, alpha)
 
 			#Convolutional layer 6
-			x8 = tf.layers.conv2d(x7, 512, 3, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x8 = tf.layers.conv2d(x7, 512, 3, 'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
 			x8 = tf.nn.leaky_relu(x8, alpha)
 
 			#Max pool layer 3
@@ -99,11 +99,11 @@ class model:
 			x13 = conv_layers_typ1(x12)
 
 			#Convolutional layer 15
-			x14 = tf.layers.conv2d(x13, 512, 1, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x14 = tf.layers.conv2d(x13, 512, 1, 'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
 			x14 = tf.nn.leaky_relu(x14, alpha)
 
 			#Convolutional layer 16
-			x15 = tf.layers.conv2d(x14, 1024, 3, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x15 = tf.layers.conv2d(x14, 1024, 3, 'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
 			x15 = tf.nn.leaky_relu(x15, alpha)
 
 			#Max pool layer 4
@@ -116,19 +116,19 @@ class model:
 			x18 = conv_layers_typ2(x17)
 			
 			#Convolutional layer 21
-			x19 = tf.layers.conv2d(x18, 1024, 3, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x19 = tf.layers.conv2d(x18, 1024, 3, 'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
 			x19 = tf.nn.leaky_relu(x19, alpha)
 
 			#Convolutional layer 22
-			x20 = tf.layers.conv2d(x19, 1024, 3, 2, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x20 = tf.layers.conv2d(x19, 1024, 3, 2, 'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
 			x20 = tf.nn.leaky_relu(x20, alpha)
 
 			#Convolutional layer 23
-			x21 = tf.layers.conv2d(x20, 1024, 3, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x21 = tf.layers.conv2d(x20, 1024, 3, 'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
 			x21 = tf.nn.leaky_relu(x21, alpha)
 
 			#Convolutional layer 24
-			x22 = tf.layers.conv2d(x21, 1024, 3, 'same', kernel_intializer = tf.contrib.layers.xavier_initializer())
+			x22 = tf.layers.conv2d(x21, 1024, 3, 'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
 			x22 = tf.nn.leaky_relu(x22, alpha)
 
 			#Fully connected layer 1
@@ -168,17 +168,17 @@ class model:
 
 		with tf.variable_scope(scope, reuse= tf.AUTO_REUSE):
 
-			boxes1 = tf.stack([predict_boxes[:,:,:,:,0],
-							   predict_boxes[:,:,:,:,1],
-							   (predict_boxes[:,:,:,:,0] + predict_boxes[:,:,:,:,2]),
-							   (predict_boxes[:,:,:,:,1] + predict_boxes[:,:,:,:,3])])
+			boxes1 = tf.stack([predict_boxes[:, :, :, :, 0] - predict_boxes[:, :, :, :, 2] / 2.0,
+                               predict_boxes[:, :, :, :, 1] - predict_boxes[:, :, :, :, 3] / 2.0,
+                               predict_boxes[:, :, :, :, 0] + predict_boxes[:, :, :, :, 2] / 2.0,
+                               predict_boxes[:, :, :, :, 1] + predict_boxes[:, :, :, :, 3] / 2.0])
 			boxes1 = tf.transpose(boxes1, [1,2,3,4,0])
 			
 			#Calculating the actual label box upper left x,y and lower right x,y
-			boxes2 = tf.stack([label_boxes[:,:,:,:,0],
-							   label_boxes[:,:,:,:,1],
-							   (label_boxes[:,:,:,:,0] + label_boxes[:,:,:,:,2]),
-							   (label_boxes[:,:,:,:,1] + label_boxes[:,:,:,:,3])])
+			boxes2 = tf.stack([label_boxes[:, :, :, :, 0] - label_boxes[:, :, :, :, 2] / 2.0,
+                               label_boxes[:, :, :, :, 1] - label_boxes[:, :, :, :, 3] / 2.0,
+                               label_boxes[:, :, :, :, 0] + label_boxes[:, :, :, :, 2] / 2.0,
+                               label_boxes[:, :, :, :, 1] + label_boxes[:, :, :, :, 3] / 2.0])
 			boxes2 = tf.transpose(boxes2, [1,2,3,4,0])
 			
 			#Calculating the intersection box upper left x,y and lower right x,y
@@ -198,7 +198,7 @@ class model:
 			uArea = tf.maximum(lArea + pArea - iArea, 1e-10)
 		
 			#Clipping and returning the IOU
-			return tf.clip_by_value(iArea / uArea . 0.0, 1.0)
+			return tf.clip_by_value(iArea / uArea , 0.0, 1.0)
 
 
 	def loss(self, prediction, labels, scope = "loss_definition"):

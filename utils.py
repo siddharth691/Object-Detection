@@ -2,8 +2,10 @@ import os
 import cv2
 import numpy as np
 import random
+import config
+import json	
 
-def readData:
+class readData:
 
 	def __init__(self, dir):
 
@@ -12,9 +14,9 @@ def readData:
 		self.testPath = os.path.join(dir, 'test')
 		self.annoPath = os.path.join(dir, 'annotations.json')
 		self.otherPath = os.path.join(dir, 'other')
-		self.image_size = 
-		self.image_shape_0 =
-		self.image_shape_1 = 
+		self.image_size = config.image_size
+		self.image_shape_0 = config.image_height
+		self.image_shape_1 = config.image_width
 		self.h_ratio = 1.0 * self.image_size / self.image_shape_0
 		self.w_ratio = 1.0 * self.image_size / self.image_shape_1
 		self.load_data_metrics()
@@ -26,7 +28,7 @@ def readData:
 			self.file = json.load(f)
 
 		self.classes = self.file['types']
-		self.no_classes = len(self.classes)
+		self.no_classes = config.no_classes
 		self.no_train_images = 0
 		self.no_test_images = 0
 		self.no_other_images = 0
