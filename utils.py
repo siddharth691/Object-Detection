@@ -63,13 +63,12 @@ class readData:
 		if(phase == 'train'):
 
 			imageId = self.trainId
-			path = self.trainPath
+			path_root = self.trainPath
 
 		elif(phase == 'test'):
 
 			imageId = self.testId
-			path = self.testPath
-
+			path_root = self.testPath
 
 		random.shuffle(imageId)
 		label_dict = []
@@ -78,8 +77,9 @@ class readData:
 
 			if(no_obj == 0):
 				continue
-			path = os.path.join(path, self.file['imgs'][imgId]['path'])
+			
 			Id = self.file['imgs'][imgId]['id']
+			path = os.path.join(path_root, str(Id)+".jpg")
 			label_dict.append({"image_path": path, "id": Id, "label": label})
 
 		return label_dict
