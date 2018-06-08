@@ -24,150 +24,166 @@ class model:
 
 		self.images = tf.placeholder(tf.float32, shape = [config.batch_size, config.image_size,config.image_size,3], name='image_placeholder')
 		self.labels = tf.placeholder(tf.float32, shape = [config.batch_size, config.no_grid, config.no_grid, 5+config.no_classes], name='label_placeholder')
-		self.global_batch_no = tf.Variable(0, name= 'global_step', trainable = False)
+		
 
 		#Calling the model to define the yolo model
-		self.predictions = self.yolo_model( alpha = config.alpha, dropout_rate = config.dropout, is_training= True)
-
-		#Calling loss function to define all the losses
-		self.loss()
-
-		#Optimizer
-		self.optimizer = tf.train.AdamOptimizer(learning_rate = config.learning_rate, epsilon = 1e-10, ).minimize(self.total_loss, global_step = self.global_batch_no)
-
-
-	def conv_layers_typ1(self, x, alpha):
-	
-		#Repeat Convolutional layer 1
-		x1 = tf.layers.conv2d(x, 256,1,1, 'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
-		x1 = tf.nn.leaky_relu(x1, alpha)
-
-		#Repeat convolutional layer 2
-		x2 = tf.layers.conv2d(x1, 512, 3,1, 'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
-		x2 = tf.nn.leaky_relu(x2, alpha)
-
-		return x2
-
-
-	def conv_layers_typ2(self, x, alpha):
-	
-		#Repeat convolutional layer 1
-		x1 = tf.layers.conv2d(x, 512, 1,1,'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
-		x1 = tf.nn.leaky_relu(x1, alpha)
-
-		#Repeat convolutional layer 2
+		self.prediction = self.yolo_model(dropout_rate = config.dropout)
 		
-		x2 = tf.layers.conv2d(x1, 1024, 3,1, 'same', kernel_initializer = tf.contrib.layers.xavier_initializer())
-		x2 = tf.nn.leaky_relu(x2, alpha)
 
-		return x2
 
-	def create_connected_layer(self, input_layer, d0, leaky, weight_index, name):
-
+	def create_connected_layer(self, input_layer, d0, leaky, weight_index, name = 'Variable', pretraining = False):
 		weight_shape = [int(input_layer.get_shape()[1]), d0]
 		bias_shape = [d0]
 
-		with tf.variable_scope(name+'_fully_connected_weights'):
-			weight = tf.get_variable('w_%s' % (name) , weight_shape, initializer=tf.contrib.layers.xavier_initializer())
-			bias = tf.get_variable('b_%s' % (name) , bias_shape, initializer=tf.constant_initializer(0.0))
+
+		if(pretraining ==  False):
+
+			with tf.variable_scope("", reuse = tf.AUTO_REUSE):
+
+				weight_name = name +'_'+ str(weight_index)
+				bias_name = name +'_'+ str(weight_index + 1)
+				weight = tf.get_variable('%s' % (weight_name) , weight_shape, initializer=tf.contrib.layers.xavier_initializer())
+				bias = tf.get_variable('%s' % (bias_name) , bias_shape, initializer=tf.constant_initializer(0.0))
+		
+		else:
+			with tf.variable_scope("new_variable", reuse = tf.AUTO_REUSE):
+				weight_name = name +'_'+ str(weight_index)
+				bias_name = name +'_'+ str(weight_index + 1)
+				weight = tf.get_variable('%s' % (weight_name) , weight_shape, initializer=tf.contrib.layers.xavier_initializer())
+				bias = tf.get_variable('%s' % (bias_name) , bias_shape, initializer=tf.constant_initializer(0.0))
 
 		return self.activation(tf.add(tf.matmul(input_layer, weight), bias), leaky)
 
 
-	def activation(self, input_layer, leaky = True):
-		"""
-		INPUTS:
-		-   input_layer: incoming Tensor 
-		-   leaky (optional): specifies that we use Leaky ReLU instead of ReLU
-		OUTPUTS:
-		-   input_layer: output of activation function
-		"""
+	def activation(self, input_layer, leaky = True, pretraining = False):
+
+
 		if leaky:
-			# trick to create leaky activation function
-			# phi(x) = x if x > 0, 0.1x otherwise
-			return tf.maximum(input_layer, tf.scalar_mul(0.1, input_layer))
+			return tf.maximum(input_layer, tf.scalar_mul(config.alpha, input_layer))
 		else:
 			return input_layer
 
 	def create_maxpool_layer(self, input_layer, d0, d1, stride):
-		#input_layer = tf.Print(input_layer, [input_layer], 'pool')
 		return tf.nn.max_pool(input_layer, ksize = [1, d0, d1, 1], strides = [1, stride, stride, 1], padding = 'SAME')
 
 	def create_dropout_layer(self, input_layer, prob):
-		"""
-		INPUTS:
-		-   input_layer: incoming Tensor
-		-   prob: float, drop out neurons uniformly at random with this probability
-		OUTPUTS:
-		-   output_layer: output Tensor after neurons are dropped out with prob = p
-		"""
 		return tf.nn.dropout(input_layer, prob)
 
-	def create_conv_layers(self, input_layer, d0, d1, filters, stride, scope):
+	def create_conv_layer(self, input_layer, d0, d1, filters, stride, index, scope = 'Variable', pretraining = False):
 
 		channels = int(input_layer.get_shape()[3])
 		weight_shape = [d0, d1, channels, filters]
 		bias_shape = [filters]
 
-		with tf.variable_scope(scope + '_conv_weights'):
-			weight = tf.get_variable( 'w_%s' % (scope), weight_shape, initializer=tf.contrib.layers.xavier_initializer_conv2d())
-			bias = tf.get_variable( 'b_%s' % (scope), bias_shape, initializer=tf.constant_initializer(0.0))
+		if (pretraining == False):
+
+			if(index == 0):
+				weight_name = scope
+			else:
+				weight_name =scope +'_'+ str(index)
+			bias_name = scope +'_'+ str(index + 1)
+
+			with tf.variable_scope("", reuse = tf.AUTO_REUSE):
+
+				weight = tf.get_variable( '%s' % (weight_name), weight_shape, initializer=tf.contrib.layers.xavier_initializer_conv2d())
+				bias = tf.get_variable( '%s' % (bias_name), bias_shape, initializer=tf.constant_initializer(0.0))
+
+		else:
+			with tf.variable_scope("new_variable", reuse = tf.AUTO_REUSE):
+				weight_name =scope +'_'+ str(index)
+				bias_name = scope +'_'+ str(index + 1)
+
+				weight = tf.get_variable( '%s' % (weight_name), weight_shape, initializer=tf.contrib.layers.xavier_initializer_conv2d())
+				bias = tf.get_variable( '%s' % (bias_name), bias_shape, initializer=tf.constant_initializer(0.0))
 
 
 		d0_pad = int(d0/2)
 		d1_pad = int(d1/2)
 		input_layer_padded = tf.pad(input_layer, paddings = [[0, 0], [d0_pad, d0_pad], [d1_pad, d1_pad], [0, 0]])
 
-		# we need VALID padding here to match the sizing calculation for output of convolutional used by darknet
+		
+		# we need VALID paddings here to match the sizing calculation for output of convolutional used by darknet
 		convolution = tf.nn.conv2d(input = input_layer_padded, filter = weight, strides = [1, stride, stride, 1], padding='VALID')
 		convolution_bias = tf.add(convolution, bias)
-		return self.activation(convolution_bias)
 
-	def yolo_model(self, dropout_rate):
+		return self.activation(convolution_bias, pretraining = pretraining)
 
-		conv_layer0 = self.create_conv_layer(self.images, 7, 7, 64, 2, 'ConvLayer0')
-		maxpool_layer1 = self.create_maxpool_layer(conv_layer0, 2, 2, 2 )
-		conv_layer2 = self.create_conv_layer(maxpool_layer1, 3, 3, 192, 1,  'ConvLayer2')
+
+	def yolo(self, dropout_rate):
+
+		conv_layer26 = self.yolo_model(dropout_rate, feature_extract = True)
+
+		conv_layer26 = tf.stop_gradient(conv_layer26)
+		conv_layer27 = self.create_conv_layer(conv_layer26, 3, 3, 1024, 1,46,pretraining = True)
+		# flatten layer for connection to fully connected layer
+		conv_layer27_flatten_dim = int(reduce(lambda a, b: a * b, conv_layer27.get_shape()[1:]))
+		conv_layer27_flatten = tf.reshape(tf.transpose(conv_layer27, (0, 3, 1, 2)), [-1, conv_layer27_flatten_dim])
+		connected_layer28 = self.create_connected_layer(conv_layer27_flatten, 512, True, 48,pretraining = True)
+		connected_layer29 = self.create_connected_layer(connected_layer28, 4096, True, 50,pretraining = True)
+		dropout_layer30 = self.create_dropout_layer(connected_layer29, dropout_rate)
+		connected_layer31 = self.create_connected_layer(dropout_layer30, self.no_grid*self.no_grid*(5*self.no_boxes_per_cell + self.no_classes), False, 52,pretraining = True)
+
+		self.prediction = tf.reshape(connected_layer31, (self.batch_size, self.no_grid,self.no_grid,5*self.no_boxes_per_cell + self.no_classes))
+
+
+		return self.prediction
+
+	def yolo_model(self, dropout_rate, feature_extract= False):
+
+		if(feature_extract == False):
+			images = tf.image.resize_images(self.images, tf.constant([448, 448]))
+			conv_layer0 = self.create_conv_layer(images, 7, 7, 64, 2,0)
+
+		else:
+			conv_layer0 = self.create_conv_layer(self.images, 7,7,64,2,0)
+
+
+		maxpool_layer1 = self.create_maxpool_layer(conv_layer0, 2, 2, 2)
+		conv_layer2 = self.create_conv_layer(maxpool_layer1, 3, 3, 192, 1,2)
 		maxpool_layer3 = self.create_maxpool_layer(conv_layer2, 2, 2, 2 )
-		conv_layer4 = self.create_conv_layer(maxpool_layer3, 1, 1, 128, 1, 'ConvLayer4')
-		conv_layer5 = self.create_conv_layer(conv_layer4, 3, 3, 256, 1, 'ConvLayer5')
-		conv_layer6 = self.create_conv_layer(conv_layer5, 1, 1, 256, 1, 'ConvLayer6')
-		conv_layer7 = self.create_conv_layer(conv_layer6, 3, 3, 512, 1, 'ConvLayer7')
+		conv_layer4 = self.create_conv_layer(maxpool_layer3, 1, 1, 128, 1,4)
+		conv_layer5 = self.create_conv_layer(conv_layer4, 3, 3, 256, 1,6)
+		conv_layer6 = self.create_conv_layer(conv_layer5, 1, 1, 256, 1,8)
+		conv_layer7 = self.create_conv_layer(conv_layer6, 3, 3, 512, 1,10)
 		maxpool_layer8 = self.create_maxpool_layer(conv_layer7, 2, 2, 2)
-		conv_layer9 = self.create_conv_layer(maxpool_layer8, 1, 1, 256, 1, 'ConvLayer9')
-		conv_layer10 = self.create_conv_layer(conv_layer9, 3, 3, 512, 1, 'ConvLayer10')
-		conv_layer11 = self.create_conv_layer(conv_layer10, 1, 1, 256, 1, 'ConvLayer11')
-		conv_layer12 = self.create_conv_layer(conv_layer11, 3, 3, 512, 1,'ConvLayer12')
-		conv_layer13 = self.create_conv_layer(conv_layer12, 1, 1, 256, 1, 'ConvLayer13')
-		conv_layer14 = self.create_conv_layer(conv_layer13, 3, 3, 512, 1, 'ConvLayer14')
-		conv_layer15 = self.create_conv_layer(conv_layer14, 1, 1, 256, 1, 'ConvLayer15')
-		conv_layer16 = self.create_conv_layer(conv_layer15, 3, 3, 512, 1, 'ConvLayer16')
-		conv_layer17 = self.create_conv_layer(conv_layer16, 1, 1, 512, 1, 'ConvLayer17')
-		conv_layer18 = self.create_conv_layer(conv_layer17, 3, 3, 1024, 1, 'ConvLayer18')
+		conv_layer9 = self.create_conv_layer(maxpool_layer8, 1, 1, 256, 1,12)
+		conv_layer10 = self.create_conv_layer(conv_layer9, 3, 3, 512, 1,14)
+		conv_layer11 = self.create_conv_layer(conv_layer10, 1, 1, 256, 1,16)
+		conv_layer12 = self.create_conv_layer(conv_layer11, 3, 3, 512, 1,18)
+		conv_layer13 = self.create_conv_layer(conv_layer12, 1, 1, 256, 1,20)
+		conv_layer14 = self.create_conv_layer(conv_layer13, 3, 3, 512, 1,22)
+		conv_layer15 = self.create_conv_layer(conv_layer14, 1, 1, 256, 1,24)
+		conv_layer16 = self.create_conv_layer(conv_layer15, 3, 3, 512, 1,26)
+		conv_layer17 = self.create_conv_layer(conv_layer16, 1, 1, 512, 1,28)
+		conv_layer18 = self.create_conv_layer(conv_layer17, 3, 3, 1024, 1,30)
 		maxpool_layer19 = self.create_maxpool_layer(conv_layer18, 2, 2, 2)
-		conv_layer20 = self.create_conv_layer(maxpool_layer19, 1, 1, 512, 1, 'ConvLayer20')
-		conv_layer21 = self.create_conv_layer(conv_layer20, 3, 3, 1024, 1,  'ConvLayer21')
-		conv_layer22 = self.create_conv_layer(conv_layer21, 1, 1, 512, 1, 'ConvLayer22')
-		conv_layer23 = self.create_conv_layer(conv_layer22, 3, 3, 1024, 1, 'ConvLayer23')
-		conv_layer24 = self.create_conv_layer(conv_layer23, 3, 3, 1024, 1, 'ConvLayer24')
-		conv_layer25 = self.create_conv_layer(conv_layer24, 3, 3, 1024, 2, 'ConvLayer25')
-		conv_layer26 = self.create_conv_layer(conv_layer25, 3, 3, 1024, 1, 'ConvLayer26')
+		conv_layer20 = self.create_conv_layer(maxpool_layer19, 1, 1, 512, 1,32)
+		conv_layer21 = self.create_conv_layer(conv_layer20, 3, 3, 1024, 1,34)
+		conv_layer22 = self.create_conv_layer(conv_layer21, 1, 1, 512, 1,36)
+		conv_layer23 = self.create_conv_layer(conv_layer22, 3, 3, 1024, 1,38)
+		conv_layer24 = self.create_conv_layer(conv_layer23, 3, 3, 1024, 1,40)
+		conv_layer25 = self.create_conv_layer(conv_layer24, 3, 3, 1024, 2,42)
+		conv_layer26 = self.create_conv_layer(conv_layer25, 3, 3, 1024, 1,44)
 
 		#Stopping till layer before this
-		conv_layer26 = tf.stop_gradient(conv_layer26)
+		if (feature_extract):
+			return conv_layer26
 
-		conv_layer27 = self.create_conv_layer(conv_layer26, 3, 3, 1024, 1, 'NewConvLayer27')
+		conv_layer27 = self.create_conv_layer(conv_layer26, 3, 3, 1024, 1,46)
 		
 		# flatten layer for connection to fully connected layer
 		conv_layer27_flatten_dim = int(reduce(lambda a, b: a * b, conv_layer27.get_shape()[1:]))
 		conv_layer27_flatten = tf.reshape(tf.transpose(conv_layer27, (0, 3, 1, 2)), [-1, conv_layer27_flatten_dim])
-		connected_layer28 = self.create_connected_layer(conv_layer27_flatten, 512, True, 28, 'NewConnectedLayer28')
-		connected_layer29 = self.create_connected_layer(connected_layer28, 4096, True, 29, 'NewConnectedLayer29')
+
+		connected_layer28 = self.create_connected_layer(conv_layer27_flatten, 512, True, 48)
+
+		
+		connected_layer29 = self.create_connected_layer(connected_layer28, 4096, True, 50)
 
 		dropout_layer30 = self.create_dropout_layer(connected_layer29, dropout_rate)
-		connected_layer31 = self.create_connected_layer(dropout_layer30, self.no_grid*self.no_grid*(5*self.no_boxes_per_cell + self.no_classes), False, 31, 'NewConnectedLayer31')
+		connected_layer31 = self.create_connected_layer(dropout_layer30, 1470, False, 52)
 
-		self.prediction = tf.reshape(x24, (self.batch_size, self.no_grid,self.no_grid,5*self.no_boxes_per_cell + self.no_classes))
+		self.prediction = tf.reshape(connected_layer31, (self.batch_size, 7,7,5*2 + 20))
 
 		return self.prediction
 

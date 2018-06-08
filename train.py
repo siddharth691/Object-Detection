@@ -6,37 +6,53 @@ from utils import readData
 import time
 import numpy as np
 
-sess = tf.InteractiveSession()
+checkpoint_path = os.path.join(config.checkpoint_path, "model.ckpt")
+model_path = "/home/siddharth/Desktop/Adversarial Learning SP/DL/object_detection/yolo.ckpt"
+log_file = os.path.join(config.log_file_path ,'status_log.txt')
+
+#Changing parameters to values in yolo.ckpt for loading
+
+
 model = model.model()
 utils = readData(config.dir_path)
 label_list = utils.createLabels('train')
 
-checkpoint_path = os.path.join(config.checkpoint_path, "model.ckpt")
-log_file = os.path.join(config.log_file_path ,'status_log.txt')
-no_images = int(config.dataset_ratio * len(label_list))
+sess = tf.InteractiveSession()
+saver = tf.train.Saver()
+sess.run(tf.global_variables_initializer())
+saver.restore(sess, model_path)
 
+
+prediction = model.yolo(config.dropout)
+model.loss()
+
+
+global_batch_no = tf.Variable(0, name= 'global_step', trainable = False)
+optimizer = tf.train.AdamOptimizer(learning_rate = config.learning_rate, epsilon = 1e-10).minimize(model.total_loss, global_step = global_batch_no)
+
+#Initialize uninitialized variables
+
+uninitialized_vars = []
+for var in tf.all_variables():
+    try:
+        sess.run(var)
+    except tf.errors.FailedPreconditionError:
+        uninitialized_vars.append(var)
+
+init_new_vars_op = tf.initialize_variables(uninitialized_vars)
+sess.run(init_new_vars_op)
+
+
+
+no_images = int(config.dataset_ratio * len(label_list))
 if(no_images <= config.batch_size):
 	raise ValueError("dataset_ratio small for current batch size")
-
-
-saver = tf.train.Saver(var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope = "yolo_model"))
-sess.run(tf.global_variables_initializer())
-
-#Restoring last checkpoint or pretrained model
-# try:
-# 	saver.restore(sess, checkpoint_path)
-# 	print ('Loading from past checkpoint...')
-# except Exception as e:
-# 	print("Start training a fresh model")
-# 	sess.run(tf.global_variables_initializer())
-
 
 
 for epoch_no in range(config.epoch):
 		
 	last_time = time.time()
 	total_loss = 0
-
 
 	batch_no = 0
 	
@@ -52,7 +68,7 @@ for epoch_no in range(config.epoch):
 			images[batch, :, :, :] = utils.read_img(image_path)
 			label[batch, :, :, :] = label_list[x + batch]['label']
 
-		loss, _ = sess.run([model.total_loss, model.optimizer], feed_dict = {model.images: images, model.labels: label})
+		loss, _ = sess.run([model.total_loss, optimizer], feed_dict = {model.images: images, model.labels: label})
 		total_loss += loss
 
 		print("Current Batch Number: {}, loss: {}".format(batch_no, loss))
