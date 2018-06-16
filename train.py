@@ -6,7 +6,7 @@ from utils import readData
 import time
 import numpy as np
 
-checkpoint_path = os.path.join(config.checkpoint_path, "model.ckpt")
+checkpoint_path = os.path.join(config.checkpoint_path, "yolo_last_layer.ckpt")
 model_path = "/home/siddharth/Desktop/Adversarial Learning SP/DL/object_detection/yolo.ckpt"
 log_file = os.path.join(config.log_file_path ,'status_log.txt')
 
@@ -18,14 +18,15 @@ utils = readData(config.dir_path)
 label_list = utils.createLabels('train')
 
 sess = tf.InteractiveSession()
-saver = tf.train.Saver()
+saver_pretrained = tf.train.Saver(var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=''))
 sess.run(tf.global_variables_initializer())
-saver.restore(sess, model_path)
+saver_pretrained.restore(sess, model_path)
 
 
 prediction = model.yolo(config.dropout)
 model.loss()
 
+saver_last_layer = tf.train.Saver(var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = 'last_layer'))
 
 global_batch_no = tf.Variable(0, name= 'global_step', trainable = False)
 optimizer = tf.train.AdamOptimizer(learning_rate = config.learning_rate, epsilon = 1e-10).minimize(model.total_loss, global_step = global_batch_no)
@@ -33,7 +34,7 @@ optimizer = tf.train.AdamOptimizer(learning_rate = config.learning_rate, epsilon
 #Initialize uninitialized variables
 
 uninitialized_vars = []
-for var in tf.all_variables():
+for var in tf.global_variables():
     try:
         sess.run(var)
     except tf.errors.FailedPreconditionError:
@@ -96,4 +97,4 @@ for epoch_no in range(config.epoch):
 	myfile.close()
 
 	
-	saver.save(sess, checkpoint_path)
+	saver_last_layer.save(sess, checkpoint_path)

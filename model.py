@@ -24,8 +24,7 @@ class model:
 
 		self.images = tf.placeholder(tf.float32, shape = [config.batch_size, config.image_size,config.image_size,3], name='image_placeholder')
 		self.labels = tf.placeholder(tf.float32, shape = [config.batch_size, config.no_grid, config.no_grid, 5+config.no_classes], name='label_placeholder')
-		
-
+			
 		#Calling the model to define the yolo model
 		self.prediction = self.yolo_model(dropout_rate = config.dropout)
 		
@@ -46,7 +45,7 @@ class model:
 				bias = tf.get_variable('%s' % (bias_name) , bias_shape, initializer=tf.constant_initializer(0.0))
 		
 		else:
-			with tf.variable_scope("new_variable", reuse = tf.AUTO_REUSE):
+			with tf.variable_scope("last_layer", reuse = tf.AUTO_REUSE):
 				weight_name = name +'_'+ str(weight_index)
 				bias_name = name +'_'+ str(weight_index + 1)
 				weight = tf.get_variable('%s' % (weight_name) , weight_shape, initializer=tf.contrib.layers.xavier_initializer())
@@ -89,7 +88,7 @@ class model:
 				bias = tf.get_variable( '%s' % (bias_name), bias_shape, initializer=tf.constant_initializer(0.0))
 
 		else:
-			with tf.variable_scope("new_variable", reuse = tf.AUTO_REUSE):
+			with tf.variable_scope("last_layer", reuse = tf.AUTO_REUSE):
 				weight_name =scope +'_'+ str(index)
 				bias_name = scope +'_'+ str(index + 1)
 
@@ -112,7 +111,6 @@ class model:
 	def yolo(self, dropout_rate):
 
 		conv_layer26 = self.yolo_model(dropout_rate, feature_extract = True)
-
 		conv_layer26 = tf.stop_gradient(conv_layer26)
 		conv_layer27 = self.create_conv_layer(conv_layer26, 3, 3, 1024, 1,46,pretraining = True)
 		# flatten layer for connection to fully connected layer
