@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import config
+from functools import *
 
 class model:
 
