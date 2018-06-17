@@ -7,7 +7,7 @@ import time
 import numpy as np
 
 checkpoint_path = os.path.join(config.checkpoint_path, "yolo_last_layer.ckpt")
-model_path = "/home/siddharth/Desktop/Adversarial Learning SP/DL/object_detection/yolo.ckpt"
+model_path = config.pretrained_model_path
 log_file = os.path.join(config.log_file_path ,'status_log.txt')
 
 #Changing parameters to values in yolo.ckpt for loading

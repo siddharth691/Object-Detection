@@ -3,6 +3,7 @@
 dir_path = "/home/sagarwal311/practice_dl/object_detection_traffic_sign/data"
 log_file_path = "/home/sagarwal311/practice_dl/object_detection_traffic_sign/log"
 checkpoint_path = "/home/sagarwal311/practice_dl/object_detection_traffic_sign/checkpoint"
+pretrained_model_path = "/home/sagarwal311/practice_dl/object_detection_traffic_sign/yolo.ckpt"
 checkpoint = 200
 
 image_size = 1024
