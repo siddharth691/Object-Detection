@@ -421,3 +421,4 @@ class model:
 			#Adding up the losses
 			self.total_loss = self.class_loss + self.confidence_obj_loss + self.confidence_noobj_loss + self.coord_loss
 
+			return self.total_loss

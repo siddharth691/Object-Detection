@@ -11,20 +11,24 @@ model_path = "/home/siddharth/Desktop/Adversarial Learning SP/DL/object_detectio
 log_file = os.path.join(config.log_file_path ,'status_log.txt')
 
 #Changing parameters to values in yolo.ckpt for loading
-
-
 model = model.model()
 utils = readData(config.dir_path)
 label_list = utils.createLabels('train')
 
 sess = tf.InteractiveSession()
+train_writer = tf.summary.FileWriter(config.log_file_path, sess.graph)
 saver_pretrained = tf.train.Saver(var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=''))
 sess.run(tf.global_variables_initializer())
 saver_pretrained.restore(sess, model_path)
 
 
 prediction = model.yolo(config.dropout)
-model.loss()
+loss = model.loss()
+
+#Add loss to scalar summary
+tf.summary.scalar("Total loss", loss)
+#Add predictions to histogram
+tf.summary.histogram("predictions", prediction)
 
 saver_last_layer = tf.train.Saver(var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = 'last_layer'))
 
@@ -42,7 +46,6 @@ for var in tf.global_variables():
 
 init_new_vars_op = tf.initialize_variables(uninitialized_vars)
 sess.run(init_new_vars_op)
-
 
 
 no_images = int(config.dataset_ratio * len(label_list))
@@ -69,8 +72,11 @@ for epoch_no in range(config.epoch):
 			images[batch, :, :, :] = utils.read_img(image_path)
 			label[batch, :, :, :] = label_list[x + batch]['label']
 
-		loss, _ = sess.run([model.total_loss, optimizer], feed_dict = {model.images: images, model.labels: label})
+		merge = tf.summary.merge_all()
+		summary, loss, _ = sess.run([merge, model.total_loss, optimizer], feed_dict = {model.images: images, model.labels: label})
 		total_loss += loss
+
+		
 
 		print("Current Batch Number: {}, loss: {}".format(batch_no, loss))
 		if ((x + 1) % config.checkpoint == 0):
@@ -84,6 +90,8 @@ for epoch_no in range(config.epoch):
 			myfile.close()
 
 		batch_no+=1
+
+	train_writer.add_summary(summary, epoch_no)
 
 	np.random.shuffle(label_list)
 	current_status ="epoch: " + str(epoch_no + 1) +" , loss: " + str(loss / (len(label_list) - config.batch_size / (config.batch_size * 1.0)))  + " ,  time (s) / epoch: " + str(time.time() - last_time)
