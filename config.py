@@ -6,12 +6,12 @@ checkpoint_path = "/home/sagarwal311/practice_dl/object_detection_traffic_sign/c
 pretrained_model_path = "/home/sagarwal311/practice_dl/object_detection_traffic_sign/yolo.ckpt"
 checkpoint = 200
 
-image_size = 1024
+image_size = 512
 image_width = 2048 
 image_height = 2048
 
 dataset_ratio = 1
-batch_size = 200
+batch_size = 40
 no_boxes_per_cell = 7
 no_grid = 10
 no_classes = 221
