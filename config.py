@@ -10,7 +10,7 @@ image_size = 512
 image_width = 2048 
 image_height = 2048
 
-dataset_ratio = 1
+dataset_ratio = 0.5
 batch_size = 40
 no_boxes_per_cell = 7
 no_grid = 10
@@ -22,8 +22,6 @@ confidence_noobj_scale = 0.4
 coord_scale = 0.8
 
 epoch = 100
-learning_rate = 0.0000005
+learning_rate = 0.00025
 alpha = 0.1
 dropout = 0.2
-
-
