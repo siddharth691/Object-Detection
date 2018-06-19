@@ -11,7 +11,7 @@ image_width = 2048
 image_height = 2048
 
 dataset_ratio = 0.5
-batch_size = 40
+batch_size = 30
 no_boxes_per_cell = 7
 no_grid = 10
 no_classes = 221
