@@ -6,7 +6,7 @@ checkpoint_path = "/home/sagarwal311/practice_dl/object_detection_traffic_sign/c
 pretrained_model_path = "/home/sagarwal311/practice_dl/object_detection_traffic_sign/yolo.ckpt"
 checkpoint = 200
 
-image_size = 512
+image_size = 256
 image_width = 2048 
 image_height = 2048
 
