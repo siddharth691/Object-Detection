@@ -74,34 +74,34 @@ for epoch_no in range(config.epoch):
 			label[batch, :, :, :] = label_list[x + batch]['label']
 
 		# merge = tf.summary.merge_all()
-		# summary, loss, _ = sess.run([merge, model.total_loss, optimizer], feed_dict = {model.images: images, model.labels: label})
+		summary, loss, _ = sess.run([merge, model.total_loss, optimizer], feed_dict = {model.images: images, model.labels: label})
 
 
-		# print("Current Batch Number: {}, loss: {}".format(batch_no, loss))
-		# if ((x + 1) % config.checkpoint == 0):
-		# 	print ("checkpoint reached: {}".format(str(x + 1)))
+		print("Current Batch Number: {}, loss: {}".format(batch_no, loss))
+		if ((x + 1) % config.checkpoint == 0):
+			print ("checkpoint reached: {}".format(str(x + 1)))
 			
-		# 	checkpoint_status = "epoch: " + str(epoch_no + 1) +" , chkpt no: " + str(x+1) +" , loss: " + str(loss / (len(label_list) - config.batch_size / (config.batch_size * 1.0))) +  " ,  time (s) / epoch: " + str(time.time() - last_time)
-		# 	with open(log_file, "a") as myfile:
-		# 		myfile.write(checkpoint_status)
-		# 		myfile.write("\n")
+			checkpoint_status = "epoch: " + str(epoch_no + 1) +" , chkpt no: " + str(x+1) +" , loss: " + str(loss / (len(label_list) - config.batch_size / (config.batch_size * 1.0))) +  " ,  time (s) / epoch: " + str(time.time() - last_time)
+			with open(log_file, "a") as myfile:
+				myfile.write(checkpoint_status)
+				myfile.write("\n")
 
-		# 	myfile.close()
+			myfile.close()
 
 		batch_no+=1
 
 	# train_writer.add_summary(summary, epoch_no)
 
-	# np.random.shuffle(label_list)
-	# current_status ="epoch: " + str(epoch_no + 1) +" , loss: " + str(loss / (len(label_list) - config.batch_size / (config.batch_size * 1.0)))  + " ,  time (s) / epoch: " + str(time.time() - last_time)
-	# print (current_status)
+	np.random.shuffle(label_list)
+	current_status ="epoch: " + str(epoch_no + 1) +" , loss: " + str(loss / (len(label_list) - config.batch_size / (config.batch_size * 1.0)))  + " ,  time (s) / epoch: " + str(time.time() - last_time)
+	print (current_status)
 
 	
-	# with open(log_file, "a") as myfile:
-	# 	myfile.write(current_status)
-	# 	myfile.write("\n")
+	with open(log_file, "a") as myfile:
+		myfile.write(current_status)
+		myfile.write("\n")
 
-	# myfile.close()
+	myfile.close()
 
 	
-	# saver_last_layer.save(sess, checkpoint_path)
+	saver_last_layer.save(sess, checkpoint_path)
