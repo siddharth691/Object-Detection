@@ -1,7 +1,7 @@
 import os
 # os.environ['TF_CPP_MIN_VLOG_LEVEL']='3'
 import tensorflow as tf
-import config_local as config
+import config as config
 import model
 from utils import readData
 import time
@@ -75,7 +75,7 @@ for epoch_no in range(config.epoch):
 
 		merge = tf.summary.merge_all()
 		summary, loss, _ = sess.run([merge, model.total_loss, optimizer], feed_dict = {model.images: images, model.labels: label})
-		
+
 
 		print("Current Batch Number: {}, loss: {}".format(batch_no, loss))
 		if ((x + 1) % config.checkpoint == 0):
