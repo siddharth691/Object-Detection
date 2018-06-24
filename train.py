@@ -74,7 +74,8 @@ for epoch_no in range(config.epoch):
 			label[batch, :, :, :] = label_list[x + batch]['label']
 
 		# merge = tf.summary.merge_all()
-		summary, loss, _ = sess.run([merge, model.total_loss, optimizer], feed_dict = {model.images: images, model.labels: label})
+		loss, _ = sess.run([model.total_loss, optimizer], feed_dict = {model.images: images, model.labels: label})
+		# summary, loss, _ = sess.run([merge, model.total_loss, optimizer], feed_dict = {model.images: images, model.labels: label})
 
 
 		print("Current Batch Number: {}, loss: {}".format(batch_no, loss))
