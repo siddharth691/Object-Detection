@@ -1,10 +1,10 @@
 import os
 import numpy as np
 import random
-import config
+import config_local as config
 import json	
 import cv2
-
+import matplotlib.pyplot as plt
 class readData:
 
 	def __init__(self, dir):
@@ -113,9 +113,60 @@ class readData:
 
 		return label, len(objs)
 
+	def display_bounding_box_batch(self, prediction, image_batch):
+
+		fig, ax = plt.subplots()
+
+		for batch in range(config.batch_size):
+
+			predict_ = prediction[batch, :,:,:]
+			image_ = image_batch[batch,:,:,:]
+
+			class_image = np.zeros(image_.shape)
+			for grid_row in range(config.no_grid):
+				for grid_col in range(config.no_grid):
+
+					boxes_with_prob = predict_[grid_row, grid_col, :]
+					box_confidence = boxes_with_prob[:config.no_boxes_per_cell]
+					best_box = np.argmax(box_confidence)
+
+
+					boxes = boxes_with_prob[config.no_boxes_per_cell: 5 * config.no_boxes_per_cell]
+					best_box_indexes = boxes[best_box * 4: (best_box + 1) * 4]
+					best_box_indexes = [best_box_indexes[0] * (1/self.w_ratio), best_box_indexes[1] * (1/self.h_ratio), best_box_indexes[2] *(1/self.w_ratio), best_box_indexes[3] * (1/self.h_ratio)]
+
+					class_confidence = boxes_with_prob[5 * config.no_boxes_per_cell :]
+					best_class = np.argmax(class_confidence)
+
+					x1 = best_box_indexes[0] - best_box_indexes[2]/2
+					y1 = best_box_indexes[1] - best_box_indexes[3]/2
+					x2 = best_box_indexes[0] + best_box_indexes[2]/2
+					y2 = best_box_indexes[1] + best_box_indexes[3]/2
+
+					image_ = cv2.rectangle(image_, (int(x1),int(y1)),(int(x2),int(y2)), (0,0,0), 1)
+					
+					class_image[grid_row, grid_col] = best_class
+
+			class_image = class_image.astype('float')
+
+			fig.canvas.mpl_connect('key_press_event', self.press)
+			plt.subplot(1,2,1)
+			plt.imshow(image_)
+			plt.axis('tight')
+
+			plt.subplot(1,2,2)
+			plt.imshow(class_image)
+			plt.axis('tight')
+			plt.show()
+			input("Press Enter to continue...")
+			
+			getch.getch()
+			plt.close()
 
 
 
-	# def display_predicted_image(self, prediction):
+
+
+
 
 		

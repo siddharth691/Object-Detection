@@ -1,14 +1,15 @@
 import os
 import tensorflow as tf
-import config
+import config_local as config
 import model
 from utils import readData
 import time
 import numpy as np
 from tensorflow.python.tools import inspect_checkpoint as chkp
 import matplotlib.pyplot as plt
+import cv2
 
-config.batch_size = 100
+# config.batch_size = 100
 checkpoint_path = os.path.join(config.checkpoint_path, "yolo_last_layer.ckpt")
 model_path = "/home/siddharth/Desktop/Adversarial Learning SP/DL/object_detection/yolo.ckpt"
 log_file = os.path.join(config.log_file_path ,'status_log.txt')
@@ -63,7 +64,11 @@ for x in range(0, no_images - config.batch_size, config.batch_size):
 
 	loss, predict = sess.run([model.total_loss, prediction], feed_dict = {model.images: images, model.labels: label})
 
-	print "loss : {}".format(loss)
+	#Plotting images
+	utils.display_bounding_box_batch(predict, images)
+
+
+	print ("loss : {}".format(loss))
 	loss_test.append(loss)
 
 	total_loss += loss

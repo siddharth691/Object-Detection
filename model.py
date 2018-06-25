@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-import config
+import config_local as config
 from functools import *
 
 class model:
