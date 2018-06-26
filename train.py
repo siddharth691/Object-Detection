@@ -83,7 +83,7 @@ for epoch_no in range(config.epoch):
 		if ((x + 1) % config.checkpoint == 0):
 			print ("checkpoint reached: {}".format(str(x + 1)))
 			
-			checkpoint_status = "epoch: " + str(epoch_no + 1) +" , chkpt no: " + str(x+1) +" , loss: " + str(loss / (len(label_list) - config.batch_size / (config.batch_size * 1.0))) +  " ,  time (s) / epoch: " + str(time.time() - last_time)
+			checkpoint_status = "epoch: " + str(epoch_no + 1) +" , chkpt no: " + str(x+1) +" , loss: " + str(loss[0] / (len(label_list) - config.batch_size / (config.batch_size * 1.0))) +  " ,  time (s) / epoch: " + str(time.time() - last_time)
 			with open(log_file, "a") as myfile:
 				myfile.write(checkpoint_status)
 				myfile.write("\n")
@@ -93,9 +93,10 @@ for epoch_no in range(config.epoch):
 		batch_no+=1
 
 	# train_writer.add_summary(summary, epoch_no)
+	# total_loss+= loss[0]
 
 	np.random.shuffle(label_list)
-	current_status ="epoch: " + str(epoch_no + 1) +" , loss: " + str(loss / (len(label_list) - config.batch_size / (config.batch_size * 1.0)))  + " ,  time (s) / epoch: " + str(time.time() - last_time)
+	current_status ="epoch: " + str(epoch_no + 1) +" , loss: " + str(loss[0] / (len(label_list) - config.batch_size / (config.batch_size * 1.0)))  + " ,  time (s) / epoch: " + str(time.time() - last_time)
 	print (current_status)
 
 	
