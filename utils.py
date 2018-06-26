@@ -130,7 +130,6 @@ class readData:
 					box_confidence = boxes_with_prob[:config.no_boxes_per_cell]
 					best_box = np.argmax(box_confidence)
 
-
 					boxes = boxes_with_prob[config.no_boxes_per_cell: 5 * config.no_boxes_per_cell]
 					best_box_indexes = boxes[best_box * 4: (best_box + 1) * 4]
 					best_box_indexes = [best_box_indexes[0] * (1/self.w_ratio), best_box_indexes[1] * (1/self.h_ratio), best_box_indexes[2] *(1/self.w_ratio), best_box_indexes[3] * (1/self.h_ratio)]
@@ -143,25 +142,22 @@ class readData:
 					x2 = best_box_indexes[0] + best_box_indexes[2]/2
 					y2 = best_box_indexes[1] + best_box_indexes[3]/2
 
+					print ("x1: {}, y1: {}, x2: {}, y2: {}".format(x1, y1, x2, y2))
+
 					image_ = cv2.rectangle(image_, (int(x1),int(y1)),(int(x2),int(y2)), (0,0,0), 1)
-					
+					image_ = cv2.normalize(image_.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
+
+
 					class_image[grid_row, grid_col] = best_class
+					class_image = cv2.normalize(class_image.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
 
-			class_image = class_image.astype('float')
+					viz = np.concatenate((image_, class_image), 1)
 
-			fig.canvas.mpl_connect('key_press_event', self.press)
-			plt.subplot(1,2,1)
-			plt.imshow(image_)
-			plt.axis('tight')
+			viz = viz.astype('float')
 
-			plt.subplot(1,2,2)
-			plt.imshow(class_image)
-			plt.axis('tight')
-			plt.show()
-			input("Press Enter to continue...")
-			
-			getch.getch()
-			plt.close()
+			cv2.imshow("viz", viz)
+			cv2.waitKey(0)
+			cv2.destroyAllWindows()
 
 
 

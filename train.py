@@ -1,7 +1,7 @@
 import os
 # os.environ['TF_CPP_MIN_VLOG_LEVEL']='3'
 import tensorflow as tf
-import config as config
+import config_local as config
 import model
 from utils import readData
 import time
@@ -74,7 +74,8 @@ for epoch_no in range(config.epoch):
 			label[batch, :, :, :] = label_list[x + batch]['label']
 
 		# merge = tf.summary.merge_all()
-		loss, _ = sess.run([model.total_loss, optimizer], feed_dict = {model.images: images, model.labels: label})
+		loss = sess.run([model.total_loss], feed_dict = {model.images: images, model.labels: label})
+		# loss, _ = sess.run([model.total_loss, optimizer], feed_dict = {model.images: images, model.labels: label})
 		# summary, loss, _ = sess.run([merge, model.total_loss, optimizer], feed_dict = {model.images: images, model.labels: label})
 
 
