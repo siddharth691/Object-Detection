@@ -1,6 +1,6 @@
 <snippet>
   <content><![CDATA[
-# ${1:Real Time Object Detection API Using YOLO}
+## Real Time Object Detection API Using YOLO
 Full data pipeline for object detection using YOLO and API
 
 ## Installation
