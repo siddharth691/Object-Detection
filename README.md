@@ -1,5 +1,6 @@
 <snippet>
-  <content><![CDATA[
+  <content>
+  
 ## Real Time Object Detection API Using YOLO
 Full data pipeline for object detection using YOLO and API
 
@@ -12,6 +13,6 @@ TODO: Write usage instructions
 TODO: Write credits
 ## License
 TODO: Write license
-]]></content>
+></content>
   <tabTrigger>readme</tabTrigger>
 </snippet>
