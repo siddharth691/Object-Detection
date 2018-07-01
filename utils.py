@@ -116,12 +116,7 @@ class readData:
 			x_center = xmin + w/2.0
 			y_center = ymin + h/2.0
 
-			norm_w = w * 1.0 / self.image_size
-			norm_h = h * 1.0 / self.image_size
-
-
-			n_x_center, n_y_center, row, col = self.normXYToGrid(x_center, y_center)
-			boxes = [n_x_center, n_y_center, norm_w, norm_h]
+			boxes = [x_center, y_center, w, h]
 
 			class_cat = obj['category']
 			class_cat_id = self.classes_dict[class_cat]
@@ -201,6 +196,7 @@ class readData:
 		boxes: list of [xmin, ymin, xmax, ymax] for all the grid cells in the image
 		scores: list of best scores
 		iou_threshold: threshold of iou for removing the boxes below it
+
 		Returns:
 		--------
 		rem_box_indexes : indexes of boxes remaining after non maximal supression
@@ -219,7 +215,7 @@ class readData:
 
 		for batch in range(config.batch_size):
 
-			predict_ = prediction[batch, :,:,:] * self.image_size
+			predict_ = prediction[batch, :,:,:] 
 			image_ = image_batch[batch,:,:,:]
 			# image_ = cv2.resize(image_batch[batch,:,:,:], (config.image_width, config.image_height))
 
@@ -241,10 +237,11 @@ class readData:
 					best_box, best_class, best_score = self.yolo_filter_boxes(box_confidence, boxes, class_confidence)
 
 					#Unnormalizing the center, width and height (converting with respect to image upper left and right)
-					n_x_cent, n_y_center, n_w, n_h = best_box
+					n_x_cent, n_y_cent, n_w, n_h = best_box
 
-					w = n_w * self.image_size
-					h = n_h * self.image_size
+					w = np.square(n_w) * self.image_size / self.no_grid  #square (n_w) * grid_width
+					h = np.square(n_h) * self.image_size / self.no_grid  #square (n_h) * grid_height
+
 					x_cent = grid_col * (self.image_size / self.no_grid) + n_x_cent * (self.image_size / self.no_grid)
 					y_cent = grid_row * (self.image_size / self.no_grid) + n_y_cent * (self.image_size / self.no_grid)
 
