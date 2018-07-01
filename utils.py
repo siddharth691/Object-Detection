@@ -143,13 +143,11 @@ class readData:
 		box_confidence : probability of object belonging to this bounding box (no_boxes_per_cell,)
 		boxes : predicted boxes (4 * no_boxes_per_cell,)
 		class_confidence : confidence (confidence probability of each class) (no_classes,)
-
 		Returns:
 		--------
 		boxes: [x,y, w, h] for the best box
 		best_class = index of the best class
 		score : (Prob of object belonging to this bounding box * Probability of class ) for best overall box
-
 		"""
 		b_c = box_confidence.copy()
 		c_c = class_confidence.copy()
@@ -193,7 +191,7 @@ class readData:
 	    
 	    return iou
 
-	def non_maximal_supression(self, boxes, scores, iou_threshold):
+	def non_maximal_supression(self, boxes, scores, max_boxes = 10, iou_threshold = 0.5):
 
 		"""
 		This function suppresses all the boxes with iou lower than a threshold with respect to box with maximum score
@@ -203,12 +201,16 @@ class readData:
 		boxes: list of [xmin, ymin, xmax, ymax] for all the grid cells in the image
 		scores: list of best scores
 		iou_threshold: threshold of iou for removing the boxes below it
+		Returns:
+		--------
+		rem_box_indexes : indexes of boxes remaining after non maximal supression
 		
 		"""
-
-		best_box_index = scores.index(max(scores))
-		boxes = np.array(boxes)
-		best_box = boxes[best_box_index,:]
+		box = tf.convert_to_tensor(np.array(boxes).reshape(-1,4), dtype = tf.float32)
+		score = tf.convert_to_tensor(np.array(scores), dtype = tf.float32)
+		max_boxes_tensor = tf.constant(max_boxes)
+		rem_box_indexes = tf.image.non_max_suppression(box, score, max_boxes_tensor, iou_threshold=iou_threshold)
+		return rem_box_indexes.eval()
 
 
 	def display_bounding_box_batch(self, prediction, image_batch):
@@ -268,8 +270,13 @@ class readData:
 					# print ("Best score: {}".format(best_score))
 					# print ("Best class: {}".format(best_class))
 
-
-					image_ = cv2.rectangle(image_, (int(xmin),int(ymin)),(int(xmax),int(ymax)), (0,0,255), 2)
+			#Non maximal supression
+			all_best_boxes = np.array(all_best_boxes).reshape(-1,4)
+			sup_box_index = self.non_maximal_supression(all_best_boxes, best_scores)
+			
+			for box_id in sup_box_index:
+				cur_box = all_best_boxes[box_id,:]
+				image_ = cv2.rectangle(image_, (int(cur_box[0]),int(cur_box[1])),(int(cur_box[2]),int(cur_box[3])), (0,0,255), 2)
 
 			image_ = cv2.normalize(image_.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
 			image_ = image_.astype('float')
@@ -285,11 +292,3 @@ class readData:
 			cv2.imshow("image", image_)
 			cv2.waitKey(0)
 			cv2.destroyAllWindows()
-
-
-
-
-
-
-
-		
