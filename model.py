@@ -349,6 +349,14 @@ class model:
 		#Dimensions of prediction:
 		Prediction will be of dimension [batch_size, no_grid, no_grid, 5*B+C]
 		in the 4th dimension: (1st B are confidence score, next 4*B are [x,y,w,h] repeated B times, and last C are class prob)
+
+
+		Prediction boxes xmid and ymid are offset from upper left coordinate of grid, and normalized by grid width and height
+		Prediction width and height are square root of normalized (with grid width and height) actual bounding box width and height
+
+		label boxes xmid and ymid are in image coordinates from upper left of the image
+		label boxes width and height are actual bounding box width and height with respect to image
+
 		""" 
 		with tf.variable_scope(scope, reuse = tf.AUTO_REUSE):
 
@@ -371,17 +379,23 @@ class model:
 			
 			###Correction and formatting
 			#Correcting predict_boxes for calculating IOU
+			self.grid_width = self.image_size / self.no_grid
+			self.grid_height = self.image_size / self.no_grid
+
+
 			corr_predict_boxes = tf.stack([(predict_boxes[:,:,:,:,0] + offset) / self.no_grid,
 										  (predict_boxes[:,:,:,:,1] + tf.transpose(offset, (0,2,1,3))) / self.no_grid,
-										  tf.square(predict_boxes[:,:,:,:,2]),
-										  tf.square(predict_boxes[:,:,:,:,3])])
+										  tf.square(predict_boxes[:,:,:,:,2]) * self.grid_width / self.image_size,
+										  tf.square(predict_boxes[:,:,:,:,3]) * self.grid_height / self.image_size])
 			corr_predict_boxes = tf.transpose(corr_predict_boxes, [1,2,3,4,0]) #As tf.stack appends new dimension in the front
 			
+			
+
 			#Formatting label boxes according by normalization and subtracting offset
 			format_label_boxes = tf.stack([label_boxes[:,:,:,:,0] * self.no_grid - offset,
-										   label_boxes[:,:,:,:,1] + tf.transpose(offset, (0,2,1,3)) / self.no_grid,
-										   tf.sqrt(label_boxes[:,:,:,:,2]),
-										   tf.sqrt(label_boxes[:,:,:,:,3])])
+										   label_boxes[:,:,:,:,1] * self.no_grid - tf.transpose(offset, (0,2,1,3)),
+										   tf.sqrt(label_boxes[:,:,:,:,2] * self.image_size / self.grid_width),
+										   tf.sqrt(label_boxes[:,:,:,:,3] * self.image_size / self.grid_height)])
 			format_label_boxes = tf.transpose(format_label_boxes, [1,2,3,4,0]) #As tf.stack appends new dimension in the front
 			
 			#Calculated IOU for each box (batch_size, no_grid, no_grid, boxes_per_cell)
