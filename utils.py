@@ -5,6 +5,8 @@ import config_local as config
 import json	
 import cv2
 import matplotlib.pyplot as plt
+import math
+
 class readData:
 
 	def __init__(self, dir):
@@ -85,6 +87,18 @@ class readData:
 		return label_dict
 
 
+	def normXYToGrid(self, x_center, y_center):
+
+		gridCellWidth = self.image_size / config.no_grid
+		gridCellHeight = self.image_size / config.no_grid
+
+		gridCellRow = math.floor( y_center / gridCellHeight )
+		gridCellCol = math.floor( x_center / gridCellWidth )
+
+
+		normalizedXCent=(x_center-(gridCellCol * gridCellWidth))/gridCellWidth
+		normalizedYCent=(y_center-(gridCellRow * gridCellHeight))/gridCellHeight
+		return normalizedXCent, normalizedYCent, gridCellRow, gridCellCol
 
 	def createImageLabel(self, imgId):
 
@@ -97,21 +111,105 @@ class readData:
 			ymin = max(min((float(obj['bbox']['ymin']) - 1) * self.h_ratio, self.image_size - 1), 0)
 			ymax = max(min((float(obj['bbox']['ymax']) - 1) * self.h_ratio, self.image_size - 1), 0)
 
-			boxes = [(xmin + xmax) / 2.0, (ymin + ymax) / 2.0, xmax - xmin, ymax - ymin]
-			x_ind = int(boxes[0] * config.no_grid / self.image_size)
-			y_ind = int(boxes[1] * config.no_grid / self.image_size)
+			w = xmax - xmin
+			h = ymax - ymin
+			x_center = xmin + w/2.0
+			y_center = ymin + h/2.0
+
+			norm_w = w * 1.0 / self.image_size
+			norm_h = h * 1.0 / self.image_size
+
+
+			n_x_center, n_y_center, row, col = self.normXYToGrid(x_center, y_center)
+			boxes = [n_x_center, n_y_center, norm_w, norm_h]
 
 			class_cat = obj['category']
 			class_cat_id = self.classes_dict[class_cat]
 
-			if(label[y_ind, x_ind, 0] == 1):
+			if(label[row, col, 0] == 1):
 				continue
 
-			label[y_ind,x_ind,0] = 1
-			label[y_ind, x_ind,1:5] = boxes
-			label[y_ind, x_ind,5+class_cat_id] = 1
+			label[row,col,0] = 1
+			label[row, col,1:5] = boxes
+			label[row, col,5+class_cat_id] = 1
 
 		return label, len(objs)
+
+	def yolo_filter_boxes(self, box_confidence, boxes, class_confidence):
+
+		"""
+		Input:
+		------
+		box_confidence : probability of object belonging to this bounding box (no_boxes_per_cell,)
+		boxes : predicted boxes (4 * no_boxes_per_cell,)
+		class_confidence : confidence (confidence probability of each class) (no_classes,)
+
+		Returns:
+		--------
+		boxes: [x,y, w, h] for the best box
+		best_class = index of the best class
+		score : (Prob of object belonging to this bounding box * Probability of class ) for best overall box
+
+		"""
+		b_c = box_confidence.copy()
+		c_c = class_confidence.copy()
+		b_c = b_c.reshape(-1,1)
+		c_c = c_c.reshape(1,-1)
+		mul = b_c * c_c
+		best_box_class = np.unravel_index(mul.argmax(), mul.shape)
+		best_box, best_class = best_box_class[0], best_box_class[1]
+
+
+		return boxes[best_box * 4: (best_box + 1) * 4], best_class, mul[best_box, best_class]
+
+	def iou(self, box1, box2):
+
+	    """This function calculates intersection over union (IoU) between box1 and box2
+	    
+	    Inputs:
+	    -------
+	    box1 : first box, list object with coordinates (x1, y1, x2, y2)
+	    box2 : second box, list object with coordinates (x1, y1, x2, y2)
+	    
+		Output:
+		-------
+		iou
+	    """
+
+	    #Calculate the (y1, x1, y2, x2) coordinates of the intersection of box1 and box2. Calculate its Area.
+	    xi1 = max(box1[0], box2[0])
+	    yi1 = max(box1[1], box2[1])
+	    xi2 = min(box1[2], box2[2])
+	    yi2 = min(box1[3], box2[3])
+	    inter_area = (xi2 - xi1) * (yi2 - yi1)
+
+	    #Calculate the Union area by using Formula: Union(A,B) = A + B - Inter(A,B)
+	    box1_area = (box1[3] - box1[1]) * (box1[2]- box1[0])
+	    box2_area = (box2[3] - box2[1]) * (box2[2]- box2[0])
+	    union_area = (box1_area + box2_area) - inter_area
+	    
+	    #compute the IoU
+	    iou = inter_area / union_area
+	    
+	    return iou
+
+	def non_maximal_supression(self, boxes, scores, iou_threshold):
+
+		"""
+		This function suppresses all the boxes with iou lower than a threshold with respect to box with maximum score
+		
+		Inputs:
+		-------
+		boxes: list of [xmin, ymin, xmax, ymax] for all the grid cells in the image
+		scores: list of best scores
+		iou_threshold: threshold of iou for removing the boxes below it
+		
+		"""
+
+		best_box_index = scores.index(max(scores))
+		boxes = np.array(boxes)
+		best_box = boxes[best_box_index,:]
+
 
 	def display_bounding_box_batch(self, prediction, image_batch):
 
@@ -119,43 +217,72 @@ class readData:
 
 		for batch in range(config.batch_size):
 
-			predict_ = prediction[batch, :,:,:]
+			predict_ = prediction[batch, :,:,:] * self.image_size
 			image_ = image_batch[batch,:,:,:]
+			# image_ = cv2.resize(image_batch[batch,:,:,:], (config.image_width, config.image_height))
 
 			class_image = np.zeros(image_.shape)
+			all_best_boxes = []
+			best_scores = []
+
 			for grid_row in range(config.no_grid):
 				for grid_col in range(config.no_grid):
 
 					boxes_with_prob = predict_[grid_row, grid_col, :]
 					box_confidence = boxes_with_prob[:config.no_boxes_per_cell]
-					best_box = np.argmax(box_confidence)
-
 					boxes = boxes_with_prob[config.no_boxes_per_cell: 5 * config.no_boxes_per_cell]
-					best_box_indexes = boxes[best_box * 4: (best_box + 1) * 4]
-					best_box_indexes = [best_box_indexes[0] * (1/self.w_ratio), best_box_indexes[1] * (1/self.h_ratio), best_box_indexes[2] *(1/self.w_ratio), best_box_indexes[3] * (1/self.h_ratio)]
-
 					class_confidence = boxes_with_prob[5 * config.no_boxes_per_cell :]
-					best_class = np.argmax(class_confidence)
-
-					x1 = best_box_indexes[0] - best_box_indexes[2]/2
-					y1 = best_box_indexes[1] - best_box_indexes[3]/2
-					x2 = best_box_indexes[0] + best_box_indexes[2]/2
-					y2 = best_box_indexes[1] + best_box_indexes[3]/2
-
-					print ("x1: {}, y1: {}, x2: {}, y2: {}".format(x1, y1, x2, y2))
-
-					image_ = cv2.rectangle(image_, (int(x1),int(y1)),(int(x2),int(y2)), (0,0,0), 1)
-					image_ = cv2.normalize(image_.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
 
 
-					class_image[grid_row, grid_col] = best_class
-					class_image = cv2.normalize(class_image.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
+					#Find best score for best class for best bounding box using matrix of shape (no_of_bounding_box_per_cell * no_of_classes) 
+					#with each element being (Probability of object * Probability of that class)
+					best_box, best_class, best_score = self.yolo_filter_boxes(box_confidence, boxes, class_confidence)
 
-					viz = np.concatenate((image_, class_image), 1)
+					#Unnormalizing the center, width and height (converting with respect to image upper left and right)
+					n_x_cent, n_y_center, n_w, n_h = best_box
 
-			viz = viz.astype('float')
+					w = n_w * self.image_size
+					h = n_h * self.image_size
+					x_cent = grid_col * (self.image_size / self.no_grid) + n_x_cent * (self.image_size / self.no_grid)
+					y_cent = grid_row * (self.image_size / self.no_grid) + n_y_cent * (self.image_size / self.no_grid)
 
-			cv2.imshow("viz", viz)
+					#Converting mid point to upper left and lower right
+					x1 = x_cent - w/2
+					y1 = y_cent - h/2
+					x2 = x_cent + w/2
+					y2 = y_cent + h/2
+
+					#Truncating between 0 and self.image_size
+					xmin = max(min((float(x1) - 1), self.image_size - 1), 0)
+					xmax = max(min((float(x2) - 1), self.image_size - 1), 0)
+					ymin = max(min((float(y1) - 1), self.image_size - 1), 0)
+					ymax = max(min((float(y2) - 1), self.image_size - 1), 0)
+					best_box = [xmin, ymin, xmax, ymax]
+
+					# best_box = [best_box[0] * (1/self.w_ratio), best_box[1] * (1/self.h_ratio), best_box[2] *(1/self.w_ratio), best_box[3] * (1/self.h_ratio)]
+					
+					all_best_boxes.append(best_box)
+					best_scores.append(best_score)
+
+					# print ("x1: {}, y1: {}, x2: {}, y2: {}".format(xmin, ymin, xmax, ymax))
+					# print ("Best score: {}".format(best_score))
+					# print ("Best class: {}".format(best_class))
+
+
+					image_ = cv2.rectangle(image_, (int(xmin),int(ymin)),(int(xmax),int(ymax)), (0,0,255), 2)
+
+			image_ = cv2.normalize(image_.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
+			image_ = image_.astype('float')
+
+			# class_image[grid_row, grid_col] = best_class
+			# class_image = cv2.normalize(class_image.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
+			# class_image = class_image.astype('float')
+
+			# viz = np.concatenate((image_, class_image), 1)	
+
+			# viz = viz.astype('float')
+
+			cv2.imshow("image", image_)
 			cv2.waitKey(0)
 			cv2.destroyAllWindows()
 
