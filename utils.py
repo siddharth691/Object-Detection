@@ -6,6 +6,7 @@ import json
 import cv2
 import matplotlib.pyplot as plt
 import math
+import tensorflow as tf
 
 class readData:
 
@@ -118,13 +119,16 @@ class readData:
 
 			boxes = [x_center, y_center, w, h]
 
+			row = int((y_center / config.image_size) * config.no_grid)
+			col = int((x_center / config.image_size) * config.no_grid)
+
 			class_cat = obj['category']
 			class_cat_id = self.classes_dict[class_cat]
 
 			if(label[row, col, 0] == 1):
 				continue
 
-			label[row,col,0] = 1
+			label[row, col,0] = 1
 			label[row, col,1:5] = boxes
 			label[row, col,5+class_cat_id] = 1
 
@@ -239,11 +243,11 @@ class readData:
 					#Unnormalizing the center, width and height (converting with respect to image upper left and right)
 					n_x_cent, n_y_cent, n_w, n_h = best_box
 
-					w = np.square(n_w) * self.image_size / self.no_grid  #square (n_w) * grid_width
-					h = np.square(n_h) * self.image_size / self.no_grid  #square (n_h) * grid_height
+					w = np.square(n_w) * config.image_size / config.no_grid  #square (n_w) * grid_width
+					h = np.square(n_h) * config.image_size / config.no_grid  #square (n_h) * grid_height
 
-					x_cent = grid_col * (self.image_size / self.no_grid) + n_x_cent * (self.image_size / self.no_grid)
-					y_cent = grid_row * (self.image_size / self.no_grid) + n_y_cent * (self.image_size / self.no_grid)
+					x_cent = grid_col * (config.image_size / config.no_grid) + n_x_cent * (config.image_size / config.no_grid)
+					y_cent = grid_row * (config.image_size / config.no_grid) + n_y_cent * (config.image_size / config.no_grid)
 
 					#Converting mid point to upper left and lower right
 					x1 = x_cent - w/2
@@ -252,10 +256,10 @@ class readData:
 					y2 = y_cent + h/2
 
 					#Truncating between 0 and self.image_size
-					xmin = max(min((float(x1) - 1), self.image_size - 1), 0)
-					xmax = max(min((float(x2) - 1), self.image_size - 1), 0)
-					ymin = max(min((float(y1) - 1), self.image_size - 1), 0)
-					ymax = max(min((float(y2) - 1), self.image_size - 1), 0)
+					xmin = max(min((float(x1) - 1), config.image_size - 1), 0)
+					xmax = max(min((float(x2) - 1), config.image_size - 1), 0)
+					ymin = max(min((float(y1) - 1), config.image_size - 1), 0)
+					ymax = max(min((float(y2) - 1), config.image_size - 1), 0)
 					best_box = [xmin, ymin, xmax, ymax]
 
 					# best_box = [best_box[0] * (1/self.w_ratio), best_box[1] * (1/self.h_ratio), best_box[2] *(1/self.w_ratio), best_box[3] * (1/self.h_ratio)]
