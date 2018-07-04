@@ -135,7 +135,7 @@ class model:
 		conv_layer17 = self.create_conv_layer(conv_layer16, 1, 1, 512, 1, 28, pretraining = True)
 		conv_layer18 = self.create_conv_layer(conv_layer17, 3, 3, 1024, 1,30, pretraining = True)
 		maxpool_layer19 = self.create_maxpool_layer(conv_layer18, 2, 2, 2)
-		conv_layer20 = self.create_conv_layer(conv_layer19, 1, 1, 512, 1 ,32, pretraining = True)
+		conv_layer20 = self.create_conv_layer(maxpool_layer19, 1, 1, 512, 1 ,32, pretraining = True)
 		conv_layer21 = self.create_conv_layer(conv_layer20, 3, 3, 1024, 1, 34, pretraining = True)
 		conv_layer22 = self.create_conv_layer(conv_layer21, 1, 1, 512, 1, 36, pretraining = True)
 		conv_layer23 = self.create_conv_layer(conv_layer22, 3, 3, 1024, 1, 38, pretraining = True)
