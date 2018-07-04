@@ -53,6 +53,8 @@ no_images = int(config.dataset_ratio * len(label_list))
 if(no_images <= config.batch_size):
 	raise ValueError("dataset_ratio small for current batch size")
 
+#Reducing the size of label_list according to dataset size
+label_list = label_list[:no_images]
 
 for epoch_no in range(config.epoch):
 		
