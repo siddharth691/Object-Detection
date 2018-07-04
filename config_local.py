@@ -16,12 +16,12 @@ no_boxes_per_cell = 7
 no_grid = 10
 no_classes = 221
 
-class_scale = 0.87
-confidence_obj_scale = 0.9
-confidence_noobj_scale = 0.4
-coord_scale = 0.8
+class_scale = 2.0
+confidence_obj_scale = 2.0
+confidence_noobj_scale = 1.0
+coord_scale = 5.0
 
 epoch = 300
 learning_rate = 0.0001
 alpha = 0.1
-dropout = 0.2
+dropout = 0.5
