@@ -111,9 +111,38 @@ class model:
 
 	def yolo(self, dropout_rate):
 
-		conv_layer26 = self.yolo_model(dropout_rate, feature_extract = True)
-		conv_layer26 = tf.stop_gradient(conv_layer26)
-		conv_layer27 = self.create_conv_layer(conv_layer26, 3, 3, 1024, 1,46,pretraining = True)
+		# conv_layer26 = self.yolo_model(dropout_rate, feature_extract = True)
+		# conv_layer26 = tf.stop_gradient(conv_layer26)
+		# conv_layer27 = self.create_conv_layer(conv_layer26, 3, 3, 1024, 1,46,pretraining = True)
+		# # flatten layer for connection to fully connected layer
+		# conv_layer27_flatten_dim = int(reduce(lambda a, b: a * b, conv_layer27.get_shape()[1:]))
+		# conv_layer27_flatten = tf.reshape(tf.transpose(conv_layer27, (0, 3, 1, 2)), [-1, conv_layer27_flatten_dim])
+		# connected_layer28 = self.create_connected_layer(conv_layer27_flatten, 512, True, 48,pretraining = True)
+		# connected_layer29 = self.create_connected_layer(connected_layer28, 4096, True, 50,pretraining = True)
+		# dropout_layer30 = self.create_dropout_layer(connected_layer29, dropout_rate)
+		# connected_layer31 = self.create_connected_layer(dropout_layer30, self.no_grid*self.no_grid*(5*self.no_boxes_per_cell + self.no_classes), False, 52,pretraining = True)
+
+		# self.prediction = tf.reshape(connected_layer31, (self.batch_size, self.no_grid,self.no_grid,5*self.no_boxes_per_cell + self.no_classes))
+
+		conv_layer10 = self.yolo_model(dropout_rate, feature_extract = True)
+		conv_layer10 = tf.stop_gradient(conv_layer10)
+		conv_layer11 = self.create_conv_layer(conv_layer10, 1, 1, 256, 1, 16, pretraining = True)
+		conv_layer12 = self.create_conv_layer(conv_layer11, 3, 3, 512, 1, 18, pretraining = True)
+		conv_layer13 = self.create_conv_layer(conv_layer12, 1, 1, 256, 1, 20, pretraining = True)
+		conv_layer14 = self.create_conv_layer(conv_layer13, 3, 3, 512, 1, 22, pretraining = True)
+		conv_layer15 = self.create_conv_layer(conv_layer14, 1, 1, 256, 1, 24, pretraining = True)
+		conv_layer16 = self.create_conv_layer(conv_layer15, 3, 3, 512, 1, 26, pretraining = True)
+		conv_layer17 = self.create_conv_layer(conv_layer16, 1, 1, 512, 1, 28, pretraining = True)
+		conv_layer18 = self.create_conv_layer(conv_layer17, 3, 3, 1024, 1,30, pretraining = True)
+		maxpool_layer19 = self.create_maxpool_layer(conv_layer18, 2, 2, 2)
+		conv_layer20 = self.create_conv_layer(conv_layer19, 1, 1, 512, 1 ,32, pretraining = True)
+		conv_layer21 = self.create_conv_layer(conv_layer20, 3, 3, 1024, 1, 34, pretraining = True)
+		conv_layer22 = self.create_conv_layer(conv_layer21, 1, 1, 512, 1, 36, pretraining = True)
+		conv_layer23 = self.create_conv_layer(conv_layer22, 3, 3, 1024, 1, 38, pretraining = True)
+		conv_layer24 = self.create_conv_layer(conv_layer23, 3, 3, 1024, 1, 40, pretraining = True)
+		conv_layer25 = self.create_conv_layer(conv_layer24,  3, 3, 1024, 2, 42, pretraining = True)
+		conv_layer26 = self.create_conv_layer(conv_layer25, 3, 3, 1024, 1, 44, pretraining = True)
+		conv_layer27 = self.create_conv_layer(conv_layer26, 3, 3, 1024, 1, 46, pretraining = True)
 		# flatten layer for connection to fully connected layer
 		conv_layer27_flatten_dim = int(reduce(lambda a, b: a * b, conv_layer27.get_shape()[1:]))
 		conv_layer27_flatten = tf.reshape(tf.transpose(conv_layer27, (0, 3, 1, 2)), [-1, conv_layer27_flatten_dim])
@@ -147,6 +176,9 @@ class model:
 		maxpool_layer8 = self.create_maxpool_layer(conv_layer7, 2, 2, 2)
 		conv_layer9 = self.create_conv_layer(maxpool_layer8, 1, 1, 256, 1,12)
 		conv_layer10 = self.create_conv_layer(conv_layer9, 3, 3, 512, 1,14)
+		#Stopping till layer before this
+		if (feature_extract):
+			return conv_layer10
 		conv_layer11 = self.create_conv_layer(conv_layer10, 1, 1, 256, 1,16)
 		conv_layer12 = self.create_conv_layer(conv_layer11, 3, 3, 512, 1,18)
 		conv_layer13 = self.create_conv_layer(conv_layer12, 1, 1, 256, 1,20)
@@ -163,11 +195,6 @@ class model:
 		conv_layer24 = self.create_conv_layer(conv_layer23, 3, 3, 1024, 1,40)
 		conv_layer25 = self.create_conv_layer(conv_layer24, 3, 3, 1024, 2,42)
 		conv_layer26 = self.create_conv_layer(conv_layer25, 3, 3, 1024, 1,44)
-
-		#Stopping till layer before this
-		if (feature_extract):
-			return conv_layer26
-
 		conv_layer27 = self.create_conv_layer(conv_layer26, 3, 3, 1024, 1,46)
 		
 		# flatten layer for connection to fully connected layer

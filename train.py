@@ -107,6 +107,6 @@ for epoch_no in range(config.epoch):
 		myfile.write("\n")
 
 	myfile.close()
-
+	
 	
 	saver_last_layer.save(sess, checkpoint_path)
