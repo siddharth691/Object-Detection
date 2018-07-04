@@ -18,7 +18,7 @@ image_size = 1024
 image_width = 2048 
 image_height = 2048
 
-dataset_ratio = 0.001
+dataset_ratio = 0.01
 batch_size = 2
 no_boxes_per_cell = 7
 no_grid = 10
