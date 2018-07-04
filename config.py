@@ -14,12 +14,12 @@ pretrained_model_path = "/home/sagarwal311/practice_dl/object_detection_traffic_
 
 checkpoint = 200
 
-image_size = 448
+image_size = 1024
 image_width = 2048 
 image_height = 2048
 
-dataset_ratio = 1
-batch_size = 20
+dataset_ratio = 0.001
+batch_size = 2
 no_boxes_per_cell = 7
 no_grid = 10
 no_classes = 221
