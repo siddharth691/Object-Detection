@@ -4,6 +4,14 @@ dir_path = "/home/sagarwal311/practice_dl/object_detection_traffic_sign/data"
 log_file_path = "/home/sagarwal311/practice_dl/object_detection_traffic_sign/log"
 checkpoint_path = "/home/sagarwal311/practice_dl/object_detection_traffic_sign/checkpoint"
 pretrained_model_path = "/home/sagarwal311/practice_dl/object_detection_traffic_sign/yolo.ckpt"
+
+# dir_path = "/home/siddharth/Desktop/Adversarial Learning SP/DL/object_detection/data"
+# log_file_path = "/home/siddharth/Desktop/Adversarial Learning SP/DL/object_detection/log"
+# checkpoint_path = "/home/siddharth/Desktop/Adversarial Learning SP/DL/object_detection/checkpoint"
+# pretrained_model_path = "/home/siddharth/Desktop/Adversarial Learning SP/DL/object_detection/yolo.ckpt"
+
+
+
 checkpoint = 200
 
 image_size = 448

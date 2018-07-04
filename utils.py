@@ -200,7 +200,6 @@ class readData:
 		boxes: list of [xmin, ymin, xmax, ymax] for all the grid cells in the image
 		scores: list of best scores
 		iou_threshold: threshold of iou for removing the boxes below it
-
 		Returns:
 		--------
 		rem_box_indexes : indexes of boxes remaining after non maximal supression
@@ -212,8 +211,7 @@ class readData:
 		rem_box_indexes = tf.image.non_max_suppression(box, score, max_boxes_tensor, iou_threshold=iou_threshold)
 		return rem_box_indexes.eval()
 
-
-	def display_bounding_box_batch(self, prediction, image_batch):
+	def display_bounding_box_batch(self, prediction, image_batch, batch_id):
 
 		fig, ax = plt.subplots()
 
@@ -221,14 +219,22 @@ class readData:
 
 			predict_ = prediction[batch, :,:,:] 
 			image_ = image_batch[batch,:,:,:]
+			image_id = batch_id[batch]
+
 			# image_ = cv2.resize(image_batch[batch,:,:,:], (config.image_width, config.image_height))
 
 			class_image = np.zeros(image_.shape)
 			all_best_boxes = []
 			best_scores = []
+			ground_truth_boxes = []
+			ground_truth_label,_ = self.createImageLabel(str(image_id))
 
 			for grid_row in range(config.no_grid):
 				for grid_col in range(config.no_grid):
+
+					#Appending ground truth boxes if object is there at that grid cell
+					if(ground_truth_label[grid_row, grid_col, 0] == 1):
+						 ground_truth_boxes.append(ground_truth_label[grid_row, grid_col,1:5])
 
 					boxes_with_prob = predict_[grid_row, grid_col, :]
 					box_confidence = boxes_with_prob[:config.no_boxes_per_cell]
@@ -278,6 +284,12 @@ class readData:
 			for box_id in sup_box_index:
 				cur_box = all_best_boxes[box_id,:]
 				image_ = cv2.rectangle(image_, (int(cur_box[0]),int(cur_box[1])),(int(cur_box[2]),int(cur_box[3])), (0,0,255), 2)
+
+			ground_truth_boxes = np.array(ground_truth_boxes).reshape(-1,4)	
+
+			for box_id in range(ground_truth_boxes.shape[0]):
+				cur_box = ground_truth_boxes[box_id,:]
+				image_ = cv2.rectangle(image_, (int(cur_box[0] - cur_box[2]/2.0), int(cur_box[1] - cur_box[3]/2.0)), (int(cur_box[0] + cur_box[2]/2.0), int(cur_box[1] + cur_box[3]/2.0)), (0,255,0), 2)
 
 			image_ = cv2.normalize(image_.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
 			image_ = image_.astype('float')
