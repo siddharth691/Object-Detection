@@ -19,7 +19,7 @@ log_file = os.path.join(config.log_file_path ,'status_log.txt')
 
 model = model.model()
 utils = readData(config.dir_path)
-label_list = utils.createLabels('test')
+label_list = utils.createLabels('train')
 
 sess = tf.InteractiveSession()
 saver_pretrained = tf.train.Saver(var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=''))
@@ -55,17 +55,20 @@ for x in range(0, no_images - config.batch_size, config.batch_size):
 	print("current batch no: {}".format(no_batches))
 	images = np.zeros((config.batch_size, config.image_size, config.image_size, 3))
 	label = np.zeros((config.batch_size, config.no_grid, config.no_grid, 5 + config.no_classes))
+	batch_id = []
 
 	for batch in range(config.batch_size):
 
 		image_path = label_list[x + batch]['image_path']
 		images[batch, :, :, :] = utils.read_img(image_path)
 		label[batch, :, :, :] = label_list[x + batch]['label']
+		batch_id.append(label_list[x + batch]['id'])
+
 
 	loss, predict = sess.run([model.total_loss, prediction], feed_dict = {model.images: images, model.labels: label})
 
 	#Plotting images
-	utils.display_bounding_box_batch(predict, images)
+	utils.display_bounding_box_batch(predict, images, batch_id)
 
 
 	print ("loss : {}".format(loss))
