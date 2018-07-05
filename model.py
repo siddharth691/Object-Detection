@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-import config
+import config as config
 from functools import *
 
 class model:
@@ -376,14 +376,12 @@ class model:
 		#Dimensions of prediction:
 		Prediction will be of dimension [batch_size, no_grid, no_grid, 5*B+C]
 		in the 4th dimension: (1st B are confidence score, next 4*B are [x,y,w,h] repeated B times, and last C are class prob)
-
-
+		
 		Prediction boxes xmid and ymid are offset from upper left coordinate of grid, and normalized by grid width and height
+		
 		Prediction width and height are square root of normalized (with grid width and height) actual bounding box width and height
-
 		label boxes xmid and ymid are in image coordinates from upper left of the image
 		label boxes width and height are actual bounding box width and height with respect to image
-
 		""" 
 		with tf.variable_scope(scope, reuse = tf.AUTO_REUSE):
 
@@ -392,7 +390,9 @@ class model:
 			label_classes = tf.reshape(self.labels[:,:,:,5:], [self.batch_size, self.no_grid, self.no_grid, self.no_classes])
 			label_boxes = tf.reshape(self.labels[:,:,:,1:5], [self.batch_size, self.no_grid, self.no_grid, 1, 4])
 			label_boxes = tf.tile(label_boxes, [1,1,1,self.no_boxes_per_cell,1]) / self.image_size
-			
+			object_presence_map = tf.reshape(self.labels[:,:,:,0], [self.batch_size, self.no_grid, self.no_grid, 1]) #if object is present in the grid cell or not
+
+
 			### extracting classes, boxes and confidence from prediction
 			predict_classes = tf.reshape(self.prediction[:,:,:,5*self.no_boxes_per_cell:], [self.batch_size, self.no_grid, self.no_grid, self.no_classes])
 			predict_boxes = tf.reshape(self.prediction[:,:,:,self.no_boxes_per_cell:5*self.no_boxes_per_cell], [self.batch_size, self.no_grid, self.no_grid, self.no_boxes_per_cell, 4])
@@ -403,11 +403,20 @@ class model:
 			offset = tf.constant(offset, dtype = tf.float32)
 			offset = tf.reshape(offset, [1, self.no_grid, self.no_grid, self.no_boxes_per_cell])
 			offset = tf.tile(offset, [self.batch_size, 1, 1, 1])
-			
+
 			###Correction and formatting
 			#Correcting predict_boxes for calculating IOU
 			self.grid_width = self.image_size / self.no_grid
 			self.grid_height = self.image_size / self.no_grid
+
+			# #Temporary to check correctness of loss function
+			# predict_classes = tf.reshape(self.labels[:,:,:,5:], [self.batch_size, self.no_grid, self.no_grid, self.no_classes])
+			# predict_boxes = tf.stack([label_boxes[:,:,:,:,0] * self.no_grid - offset,
+			# 							   label_boxes[:,:,:,:,1] * self.no_grid - tf.transpose(offset, (0,2,1,3)),
+			# 							   tf.sqrt(label_boxes[:,:,:,:,2] * self.image_size / self.grid_width),
+			# 							   tf.sqrt(label_boxes[:,:,:,:,3] * self.image_size / self.grid_height)])
+			# predict_boxes = tf.transpose(predict_boxes, [1,2,3,4,0])
+			# predict_confidence = tf.tile(object_presence_map, [1,1,1,self.no_boxes_per_cell])
 
 
 			corr_predict_boxes = tf.stack([(predict_boxes[:,:,:,:,0] + offset) / self.no_grid,
@@ -429,8 +438,6 @@ class model:
 			calc_iou_boxes = self.calc_iou(corr_predict_boxes, label_boxes)
 			
 			###Calculating difference masks
-			#Mask if the object is present in the cell or not (batch_size, no_grid, no_grid, 1)
-			object_presence_map = tf.reshape(self.labels[:,:,:,0], [self.batch_size, self.no_grid, self.no_grid, 1]) #if object is present in the grid cell or not
 			
 			#Calculating object max (float 1,0 of shape (batch_size, no_grid, no_grid, boxes_per_cell))
 			iou_mask = tf.reduce_max(calc_iou_boxes, axis = 3, keepdims = True)
