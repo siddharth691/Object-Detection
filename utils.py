@@ -156,7 +156,6 @@ class readData:
 		best_box_class = np.unravel_index(mul.argmax(), mul.shape)
 		best_box, best_class = best_box_class[0], best_box_class[1]
 
-
 		return boxes[best_box * 4: (best_box + 1) * 4], best_class, mul[best_box, best_class]
 
 	def iou(self, box1, box2):
@@ -200,7 +199,6 @@ class readData:
 		boxes: list of [xmin, ymin, xmax, ymax] for all the grid cells in the image
 		scores: list of best scores
 		iou_threshold: threshold of iou for removing the boxes below it
-
 		Returns:
 		--------
 		rem_box_indexes : indexes of boxes remaining after non maximal supression

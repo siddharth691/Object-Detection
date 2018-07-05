@@ -53,6 +53,8 @@ no_images = int(config.dataset_ratio * len(label_list))
 if(no_images <= config.batch_size):
 	raise ValueError("dataset_ratio small for current batch size")
 
+#Reducing the size of label_list according to dataset size
+label_list = label_list[:no_images]
 
 for epoch_no in range(config.epoch):
 		
@@ -74,8 +76,8 @@ for epoch_no in range(config.epoch):
 			label[batch, :, :, :] = label_list[x + batch]['label']
 
 		# merge = tf.summary.merge_all()
-		loss = sess.run([model.total_loss], feed_dict = {model.images: images, model.labels: label})
-		# loss, _ = sess.run([model.total_loss, optimizer], feed_dict = {model.images: images, model.labels: label})
+		# loss = sess.run([model.total_loss], feed_dict = {model.images: images, model.labels: label})
+		loss, _ = sess.run([model.total_loss, optimizer], feed_dict = {model.images: images, model.labels: label})
 		# summary, loss, _ = sess.run([merge, model.total_loss, optimizer], feed_dict = {model.images: images, model.labels: label})
 
 
@@ -93,17 +95,18 @@ for epoch_no in range(config.epoch):
 		batch_no+=1
 
 	# train_writer.add_summary(summary, epoch_no)
+	# total_loss+= loss[0]
 
 	np.random.shuffle(label_list)
 	current_status ="epoch: " + str(epoch_no + 1) +" , loss: " + str(loss / (len(label_list) - config.batch_size / (config.batch_size * 1.0)))  + " ,  time (s) / epoch: " + str(time.time() - last_time)
 	print (current_status)
 
-	
+	loss_write = str(loss) +','
 	with open(log_file, "a") as myfile:
-		myfile.write(current_status)
+		myfile.write(loss_write)
 		myfile.write("\n")
 
 	myfile.close()
-
+	
 	
 	saver_last_layer.save(sess, checkpoint_path)

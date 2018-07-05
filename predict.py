@@ -45,7 +45,13 @@ sess.run(init_new_vars_op)
 
 #Restoring last layer variables
 saver_last_layer.restore(sess, checkpoint_path)
-no_images = len([img for img in os.listdir(utils.testPath) if img.endswith('.jpg')])
+
+# no_images = len([img for img in os.listdir(utils.testPath) if img.endswith('.jpg')])
+no_images = int(config.dataset_ratio * len(label_list))
+#Reducing the size of label_list according to dataset size
+label_list = label_list[:no_images]
+
+
 
 total_loss = 0
 loss_test = []
