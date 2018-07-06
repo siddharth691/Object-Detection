@@ -34,7 +34,7 @@ loss = model.loss()
 saver_last_layer = tf.train.Saver(var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = 'last_layer'))
 
 global_batch_no = tf.Variable(0, name= 'global_step', trainable = False)
-optimizer = tf.train.AdamOptimizer(learning_rate = config.learning_rate, epsilon = 1e-10).minimize(model.total_loss, global_step = global_batch_no)
+optimizer = tf.train.AdamOptimizer(learning_rate = config.learning_rate, epsilon = 0.01).minimize(model.total_loss, global_step = global_batch_no)
 
 #Initialize uninitialized variables
 
