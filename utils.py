@@ -73,7 +73,7 @@ class readData:
 			imageId = self.testId
 			path_root = self.testPath
 
-		random.shuffle(imageId)
+		# random.shuffle(imageId)
 		label_dict = []
 		for imgId in imageId:
 			label, no_obj = self.createImageLabel(imgId)
@@ -155,6 +155,7 @@ class readData:
 		mul = b_c * c_c
 		best_box_class = np.unravel_index(mul.argmax(), mul.shape)
 		best_box, best_class = best_box_class[0], best_box_class[1]
+
 
 		return boxes[best_box * 4: (best_box + 1) * 4], best_class, mul[best_box, best_class]
 
