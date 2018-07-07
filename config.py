@@ -31,4 +31,4 @@ epoch = 300
 learning_rate = 0.0001
 alpha = 0.1
 dropout = 0.0001
-epsilon = 0.1
+epsilon = 0.01
