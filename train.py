@@ -34,7 +34,7 @@ loss = model.loss()
 saver_last_layer = tf.train.Saver(var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = 'last_layer'))
 
 global_batch_no = tf.Variable(0, name= 'global_step', trainable = False)
-optimizer = tf.train.AdamOptimizer(learning_rate = config.learning_rate, epsilon = 0.01).minimize(model.total_loss, global_step = global_batch_no)
+optimizer = tf.train.AdamOptimizer(learning_rate = config.learning_rate, epsilon = config.epsilon).minimize(model.total_loss, global_step = global_batch_no)
 
 #Initialize uninitialized variables
 
@@ -79,13 +79,13 @@ for epoch_no in range(config.epoch):
 		# loss = sess.run([model.total_loss], feed_dict = {model.images: images, model.labels: label})
 		loss, _ = sess.run([model.total_loss, optimizer], feed_dict = {model.images: images, model.labels: label})
 		# summary, loss, _ = sess.run([merge, model.total_loss, optimizer], feed_dict = {model.images: images, model.labels: label})
-
+		total_loss+=loss
 
 		print("Current Batch Number: {}, loss: {}".format(batch_no, loss))
 		if ((x + 1) % config.checkpoint == 0):
 			print ("checkpoint reached: {}".format(str(x + 1)))
 			
-			checkpoint_status = "epoch: " + str(epoch_no + 1) +" , chkpt no: " + str(x+1) +" , loss: " + str(loss) +  " ,  time (s) / epoch: " + str(time.time() - last_time)
+			checkpoint_status = "epoch: " + str(epoch_no + 1) +" , chkpt no: " + str(x+1) +" , batch loss: " + str(loss) +  " ,  time (s) / epoch: " + str(time.time() - last_time)
 			with open(log_file, "a") as myfile:
 				myfile.write(checkpoint_status)
 				myfile.write("\n")
@@ -98,7 +98,7 @@ for epoch_no in range(config.epoch):
 	# total_loss+= loss[0]
 
 	np.random.shuffle(label_list)
-	current_status ="epoch: " + str(epoch_no + 1) +" , loss: " + str(loss)  + " ,  time (s) / epoch: " + str(time.time() - last_time)
+	current_status ="epoch: " + str(epoch_no + 1) +" , total loss: " + str(total_loss)  + " ,  time (s) / epoch: " + str(time.time() - last_time)
 	print (current_status)
 
 	loss_write = str(loss) +','

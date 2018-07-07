@@ -28,6 +28,7 @@ confidence_noobj_scale = 0.5
 coord_scale = 5.0
 
 epoch = 300
-learning_rate = 0.0001
+learning_rate = 0.001
 alpha = 0.1
 dropout = 0.5
+epsilon = 0.1

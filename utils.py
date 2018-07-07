@@ -73,7 +73,6 @@ class readData:
 			imageId = self.testId
 			path_root = self.testPath
 
-		random.shuffle(imageId)
 		label_dict = []
 		for imgId in imageId:
 			label, no_obj = self.createImageLabel(imgId)
@@ -142,6 +141,7 @@ class readData:
 		box_confidence : probability of object belonging to this bounding box (no_boxes_per_cell,)
 		boxes : predicted boxes (4 * no_boxes_per_cell,)
 		class_confidence : confidence (confidence probability of each class) (no_classes,)
+		
 		Returns:
 		--------
 		boxes: [x,y, w, h] for the best box
