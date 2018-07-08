@@ -128,7 +128,7 @@ class model:
 		conv_layer0 = tf.stop_gradient(conv_layer0)
 
 		maxpool_layer1 = self.create_maxpool_layer(conv_layer0, 2, 2, 2)
-		conv_layer2 = self.create_conv_layer(maxpool_layer1, 1, 1, 256, 1, 16, pretraining = True)
+		conv_layer2 = self.create_conv_layer(maxpool_layer1, 1, 1, 256, 1, 2, pretraining = True)
 		maxpool_layer3 = self.create_maxpool_layer(conv_layer2, 2, 2, 2)
 		conv_layer4 = self.create_conv_layer(maxpool_layer3, 1, 1, 128, 1,4, pretraining = True)
 		conv_layer5 = self.create_conv_layer(conv_layer4, 3, 3, 256, 1,6, pretraining = True)
