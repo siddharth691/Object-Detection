@@ -124,8 +124,19 @@ class model:
 
 		# self.prediction = tf.reshape(connected_layer31, (self.batch_size, self.no_grid,self.no_grid,5*self.no_boxes_per_cell + self.no_classes))
 
-		conv_layer10 = self.yolo_model(dropout_rate, feature_extract = True)
-		conv_layer10 = tf.stop_gradient(conv_layer10)
+		conv_layer0 = self.yolo_model(dropout_rate, feature_extract = True)
+		conv_layer0 = tf.stop_gradient(conv_layer0)
+
+		maxpool_layer1 = self.create_maxpool_layer(conv_layer0, 2, 2, 2)
+		conv_layer2 = self.create_conv_layer(maxpool_layer1, 1, 1, 256, 1, 16, pretraining = True)
+		maxpool_layer3 = self.create_maxpool_layer(conv_layer2, 2, 2, 2)
+		conv_layer4 = self.create_conv_layer(maxpool_layer3, 1, 1, 128, 1,4, pretraining = True)
+		conv_layer5 = self.create_conv_layer(conv_layer4, 3, 3, 256, 1,6, pretraining = True)
+		conv_layer6 = self.create_conv_layer(conv_layer5, 1, 1, 256, 1,8, pretraining = True)
+		conv_layer7 = self.create_conv_layer(conv_layer6, 3, 3, 512, 1,10, pretraining = True)
+		maxpool_layer8 = self.create_maxpool_layer(conv_layer7, 2, 2, 2)
+		conv_layer9 = self.create_conv_layer(maxpool_layer8, 1, 1, 256, 1,12, pretraining  = True)
+		conv_layer10 = self.create_conv_layer(conv_layer9, 3, 3, 512, 1,14, pretraining = True)
 		conv_layer11 = self.create_conv_layer(conv_layer10, 1, 1, 256, 1, 16, pretraining = True)
 		conv_layer12 = self.create_conv_layer(conv_layer11, 3, 3, 512, 1, 18, pretraining = True)
 		conv_layer13 = self.create_conv_layer(conv_layer12, 1, 1, 256, 1, 20, pretraining = True)
@@ -165,6 +176,9 @@ class model:
 		else:
 			conv_layer0 = self.create_conv_layer(self.images, 7,7,64,2,0)
 
+		#Stopping till layer before this
+		if(feature_extract):
+			return conv_layer0
 
 		maxpool_layer1 = self.create_maxpool_layer(conv_layer0, 2, 2, 2)
 		conv_layer2 = self.create_conv_layer(maxpool_layer1, 3, 3, 192, 1,2)
@@ -176,9 +190,6 @@ class model:
 		maxpool_layer8 = self.create_maxpool_layer(conv_layer7, 2, 2, 2)
 		conv_layer9 = self.create_conv_layer(maxpool_layer8, 1, 1, 256, 1,12)
 		conv_layer10 = self.create_conv_layer(conv_layer9, 3, 3, 512, 1,14)
-		#Stopping till layer before this
-		if (feature_extract):
-			return conv_layer10
 		conv_layer11 = self.create_conv_layer(conv_layer10, 1, 1, 256, 1,16)
 		conv_layer12 = self.create_conv_layer(conv_layer11, 3, 3, 512, 1,18)
 		conv_layer13 = self.create_conv_layer(conv_layer12, 1, 1, 256, 1,20)
