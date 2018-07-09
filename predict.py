@@ -89,7 +89,7 @@ print ("total_loss = {}".format(total_loss))
 
 
 fig,ax = plt.subplots()
-ax.plot(range(no_batches), total_loss, linewidth =2)
+ax.plot(range(no_batches), loss_test, linewidth =2)
 plt.axis('tight')
 plt.xlabel('Batch number')
 plt.ylabel('Total loss for that batch')

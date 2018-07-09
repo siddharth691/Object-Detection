@@ -190,7 +190,7 @@ class readData:
 	    
 	    return iou
 
-	def non_maximal_supression(self, boxes, scores, max_boxes = 10, iou_threshold = 0.5):
+	def non_maximal_supression(self, boxes, scores, max_boxes = 10, iou_threshold = 0.7):
 
 		"""
 		This function suppresses all the boxes with iou lower than a threshold with respect to box with maximum score

@@ -101,7 +101,7 @@ for epoch_no in range(config.epoch):
 	current_status ="epoch: " + str(epoch_no + 1) +" , total loss: " + str(total_loss)  + " ,  time (s) / epoch: " + str(time.time() - last_time)
 	print (current_status)
 
-	loss_write = str(loss) +','
+	loss_write = str(total_loss) +','
 	with open(log_file, "a") as myfile:
 		myfile.write(loss_write)
 		myfile.write("\n")
