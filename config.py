@@ -16,8 +16,8 @@ image_size = 1024
 image_width = 2048 
 image_height = 2048
 
-dataset_ratio = 0.01
-batch_size = 2
+dataset_ratio = 1
+batch_size = 30
 no_boxes_per_cell = 7
 no_grid = 10
 no_classes = 221
@@ -25,7 +25,7 @@ no_classes = 221
 class_scale = 1.0
 confidence_obj_scale = 1.0
 confidence_noobj_scale = 0.5
-coord_scale = 5.0
+coord_scale = 8.0
 
 epoch = 300
 learning_rate = 0.0005
